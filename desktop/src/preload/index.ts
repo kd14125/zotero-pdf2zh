@@ -19,6 +19,7 @@ const api: DesktopApi = {
     save: (profile) => ipcRenderer.invoke(channels.providersSave, profile),
     remove: (id) => ipcRenderer.invoke(channels.providersRemove, id),
     test: (profile) => ipcRenderer.invoke(channels.providersTest, profile),
+    listModels: (profile) => ipcRenderer.invoke(channels.providersModels, profile),
   },
   runtime: {
     getState: () => ipcRenderer.invoke(channels.runtimeState),

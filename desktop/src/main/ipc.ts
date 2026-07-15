@@ -67,6 +67,9 @@ export function registerIpc(options: {
   ipcMain.handle(channels.providersTest, async (_event, input) =>
     providers.test(providerProfileSchema.parse(input)),
   );
+  ipcMain.handle(channels.providersModels, async (_event, input) =>
+    providers.listModels(providerProfileSchema.parse(input)),
+  );
 
   ipcMain.handle(channels.runtimeState, () => runtime.getState());
   ipcMain.handle(channels.runtimeEnsure, () => runtime.ensureInstalled());

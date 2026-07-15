@@ -7,16 +7,16 @@
 无需 Zotero 和 Python 的 Windows PDF 翻译桌面客户端
 
 [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?style=flat-square&logo=windows)](https://github.com/kd14125/zotero-pdf2zh/releases)
-[![Desktop release](https://img.shields.io/badge/Desktop-v0.1.1-2E7D32?style=flat-square)](https://github.com/kd14125/zotero-pdf2zh/releases/tag/desktop-v0.1.1)
+[![Desktop release](https://img.shields.io/badge/Desktop-v0.2.0-2E7D32?style=flat-square)](https://github.com/kd14125/zotero-pdf2zh/releases/tag/desktop-v0.2.0)
 [![License](https://img.shields.io/badge/License-AGPL--3.0--or--later-555?style=flat-square)](./LICENSE)
 [![Upstream](https://img.shields.io/badge/Forked%20from-guaguastandup%2Fzotero--pdf2zh-24292F?style=flat-square&logo=github)](https://github.com/guaguastandup/zotero-pdf2zh)
 
-[![直接下载 Windows 安装包](https://img.shields.io/badge/直接下载-Windows%20安装包-2E7D32?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kd14125/zotero-pdf2zh/releases/download/desktop-v0.1.1/PDF2ZH-Desktop-Setup-0.1.1.exe)
+[![直接下载 Windows 安装包](https://img.shields.io/badge/直接下载-Windows%20安装包-2E7D32?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kd14125/zotero-pdf2zh/releases/download/desktop-v0.2.0/PDF2ZH-Desktop-Setup-0.2.0.exe)
 
 **普通用户只需下载并运行 `.exe`，不需要下载 `.sha256` 文件。**
 
-[查看版本说明](https://github.com/kd14125/zotero-pdf2zh/releases/tag/desktop-v0.1.1)
-· [SHA-256 校验文件（高级用户可选）](https://github.com/kd14125/zotero-pdf2zh/releases/download/desktop-v0.1.1/PDF2ZH-Desktop-Setup-0.1.1.exe.sha256)
+[查看版本说明](https://github.com/kd14125/zotero-pdf2zh/releases/tag/desktop-v0.2.0)
+· [SHA-256 校验文件（高级用户可选）](https://github.com/kd14125/zotero-pdf2zh/releases/download/desktop-v0.2.0/PDF2ZH-Desktop-Setup-0.2.0.exe.sha256)
 
 </div>
 
@@ -44,6 +44,8 @@ PDF 进行单语或双语翻译，不需要安装 Zotero、Python、uv 或 conda
 - 保存本地历史记录，支持 PDF 预览、打开文件、定位目录和按原配置重试
 - 支持 SiliconFlowFree、OpenAI、AliyunDashScope、DeepSeek、SiliconFlow、Zhipu 和
   OpenAICompatible
+- 同一服务可保存多组独立 API 配置，点击左侧配置即可切换当前翻译服务
+- 使用当前配置的 Base URL 和 API Key 获取模型列表，同时保留手动输入模型名称
 - 首次启动自动下载固定版本运行时，并进行 SHA-256 完整性校验
 - API Key 通过 Electron `safeStorage` 和 Windows DPAPI 加密保存
 
@@ -53,7 +55,7 @@ PDF 进行单语或双语翻译，不需要安装 Zotero、Python、uv 或 conda
 
 系统要求为 Windows 10/11 x64。点击下方链接下载并运行安装包：
 
-**[直接下载 PDF2ZH Desktop 安装包（`.exe`）](https://github.com/kd14125/zotero-pdf2zh/releases/download/desktop-v0.1.1/PDF2ZH-Desktop-Setup-0.1.1.exe)**
+**[直接下载 PDF2ZH Desktop 安装包（`.exe`）](https://github.com/kd14125/zotero-pdf2zh/releases/download/desktop-v0.2.0/PDF2ZH-Desktop-Setup-0.2.0.exe)**
 
 普通用户不需要下载或处理 SHA-256 文件。安装完成后直接启动 PDF2ZH Desktop，软件会通过
 图形界面完成后续运行时下载和校验。
@@ -81,6 +83,10 @@ SHA-256 校验和解压均由软件自动完成，不需要在浏览器中另外
 
 在“设置”页面新增服务配置，填写 API Key、Base URL 和模型等必要信息，然后点击“测试连接”。
 测试连接会真实调用服务商接口，可能产生少量费用。
+
+每条配置拥有独立的 API Key、Base URL 和模型。保存后可在左侧列表中点击切换当前翻译服务，
+不会覆盖其他配置。模型输入框支持手动填写，也可以点击“获取模型”从当前服务接口载入列表。
+保存的 API Key 使用 Windows DPAPI 加密保存在本机，重启应用后仍可继续使用。
 
 SiliconFlowFree 不需要 API Key，适合快速体验；需要更稳定或更高质量的结果时，可配置自己的
 翻译服务。QPS 表示每秒请求数，Pool Size 表示并行处理规模，请以服务商的限流规则为准，

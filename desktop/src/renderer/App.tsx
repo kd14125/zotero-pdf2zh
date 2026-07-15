@@ -816,16 +816,21 @@ function SettingsView({
   notify: (notice: Notice) => void;
 }) {
   const [selectedId, setSelectedId] = useState(profiles[0]?.id || "");
-  const selected = profiles.find((profile) => profile.id === selectedId) || profiles[0];
+  const selected = profiles.find((profile) => profile.id === selectedId);
   const [draft, setDraft] = useState<ProviderProfile>(() => selected || newProfile("deepseek"));
   const [apiKey, setApiKey] = useState("");
   const [testing, setTesting] = useState(false);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [modelOptions, setModelOptions] = useState<string[]>([]);
   useEffect(() => {
     if (selected) {
       setDraft(selected);
       setApiKey("");
+      setModelOptions([]);
+    } else if (!selectedId && profiles[0]) {
+      setSelectedId(profiles[0].id);
     }
-  }, [selected?.id]);
+  }, [profiles, selected, selectedId]);
   const changeProvider = (provider: ProviderId) => {
     const def = providerDefinitions[provider];
     setDraft({
@@ -835,17 +840,23 @@ function SettingsView({
       model: def.defaultModel,
       name: def.label,
     });
+    setApiKey("");
+    setModelOptions([]);
   };
   const save = async () => {
     try {
-      await window.pdf2zh.providers.save({
+      const saved = await window.pdf2zh.providers.save({
         ...draft,
         apiKey: apiKey || undefined,
         hasApiKey: draft.hasApiKey || Boolean(apiKey),
         updatedAt: new Date().toISOString(),
       });
+      setSelectedId(saved.id);
+      setDraft(saved);
+      setApiKey("");
       await refresh();
-      notify({ type: "success", text: "配置已保存" });
+      await saveSettings({ activeProfileId: saved.id });
+      notify({ type: "success", text: "配置已保存并切换为当前翻译服务" });
     } catch (error) {
       showError(error, notify);
     }
@@ -861,6 +872,53 @@ function SettingsView({
       setTesting(false);
     }
   };
+  const loadModels = async () => {
+    setLoadingModels(true);
+    try {
+      const result = await window.pdf2zh.providers.listModels({
+        ...draft,
+        apiKey: apiKey || undefined,
+      });
+      setModelOptions(result.models);
+      if (result.ok && !draft.model && result.models[0]) {
+        setDraft({ ...draft, model: result.models[0] });
+      }
+      notify({ type: result.ok ? "success" : "error", text: result.message });
+    } catch (error) {
+      showError(error, notify);
+    } finally {
+      setLoadingModels(false);
+    }
+  };
+  const selectProfile = async (profile: ProviderProfile) => {
+    setSelectedId(profile.id);
+    setDraft(profile);
+    setApiKey("");
+    setModelOptions([]);
+    try {
+      await saveSettings({ activeProfileId: profile.id });
+    } catch (error) {
+      showError(error, notify);
+    }
+  };
+  const removeProfile = async () => {
+    try {
+      await window.pdf2zh.providers.remove(draft.id);
+      const remaining = profiles.filter((profile) => profile.id !== draft.id);
+      const next = remaining[0];
+      setSelectedId(next?.id || "");
+      setDraft(next || newProfile("deepseek", remaining));
+      setApiKey("");
+      setModelOptions([]);
+      await refresh();
+      if (settings.activeProfileId === draft.id) {
+        await saveSettings({ activeProfileId: next?.id });
+      }
+      notify({ type: "success", text: "配置已删除" });
+    } catch (error) {
+      showError(error, notify);
+    }
+  };
   return (
     <div className="page">
       <PageHeader
@@ -870,10 +928,11 @@ function SettingsView({
           <button
             className="primary-button"
             onClick={() => {
-              const next = newProfile("deepseek");
+              const next = newProfile("deepseek", profiles);
               setSelectedId(next.id);
               setDraft(next);
               setApiKey("");
+              setModelOptions([]);
             }}
           >
             <Plus size={16} />
@@ -887,7 +946,7 @@ function SettingsView({
             <button
               key={profile.id}
               className={selectedId === profile.id ? "active" : ""}
-              onClick={() => setSelectedId(profile.id)}
+              onClick={() => void selectProfile(profile)}
             >
               <div className="provider-icon">
                 <KeyRound size={17} />
@@ -910,11 +969,7 @@ function SettingsView({
               <button
                 className="icon-button danger"
                 title="删除配置"
-                onClick={async () => {
-                  await window.pdf2zh.providers.remove(draft.id);
-                  await refresh();
-                  notify({ type: "success", text: "配置已删除" });
-                }}
+                onClick={() => void removeProfile()}
               >
                 <Trash2 size={17} />
               </button>
@@ -955,12 +1010,33 @@ function SettingsView({
             </label>
             <label className="field">
               <span>模型</span>
-              <input
-                value={draft.model}
-                disabled={draft.provider === "siliconflowfree"}
-                placeholder="模型名称"
-                onChange={(e) => setDraft({ ...draft, model: e.target.value })}
-              />
+              <div className="model-picker">
+                <input
+                  list={`model-options-${draft.id}`}
+                  value={draft.model}
+                  disabled={draft.provider === "siliconflowfree"}
+                  placeholder="输入模型名称或获取模型列表"
+                  onChange={(e) => setDraft({ ...draft, model: e.target.value })}
+                />
+                <button
+                  type="button"
+                  className="secondary-button"
+                  disabled={draft.provider === "siliconflowfree" || loadingModels}
+                  onClick={() => void loadModels()}
+                >
+                  {loadingModels ? (
+                    <LoaderCircle className="spin" size={15} />
+                  ) : (
+                    <RefreshCw size={15} />
+                  )}
+                  获取模型
+                </button>
+              </div>
+              <datalist id={`model-options-${draft.id}`}>
+                {modelOptions.map((model) => (
+                  <option key={model} value={model} />
+                ))}
+              </datalist>
             </label>
             <label className="field">
               <span>API Key</span>
@@ -977,7 +1053,9 @@ function SettingsView({
             <ShieldCheck size={18} />
             <div>
               <strong>Windows DPAPI 加密</strong>
-              <span>密钥仅在任务运行期间写入临时配置，完成后自动删除。</span>
+              <span>
+                API Key 已使用 Windows DPAPI 加密保存在本机。任务临时配置会在完成后自动删除。
+              </span>
             </div>
           </div>
           <div className="form-actions">
@@ -1003,12 +1081,6 @@ function SettingsView({
           </button>
           <button className="text-button" onClick={() => void window.pdf2zh.app.openSource()}>
             查看源码
-          </button>
-          <button
-            className="text-button"
-            onClick={() => void saveSettings({ activeProfileId: draft.id })}
-          >
-            设为默认
           </button>
         </div>
       </section>
@@ -1251,12 +1323,16 @@ const languageOptions = [
   { value: "es", label: "西班牙语" },
   { value: "ru", label: "俄语" },
 ];
-function newProfile(provider: ProviderId): ProviderProfile {
+function newProfile(provider: ProviderId, profiles: ProviderProfile[] = []): ProviderProfile {
   const now = new Date().toISOString();
   const def = providerDefinitions[provider];
+  const names = new Set(profiles.map((profile) => profile.name));
+  let name = def.label;
+  let suffix = 2;
+  while (names.has(name)) name = `${def.label} ${suffix++}`;
   return {
     id: crypto.randomUUID(),
-    name: def.label,
+    name,
     provider,
     baseUrl: def.defaultUrl,
     model: def.defaultModel,
