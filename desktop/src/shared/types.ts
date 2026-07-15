@@ -97,6 +97,26 @@ export interface AppSettings {
   lastOptions: TranslationOptions;
 }
 
+export type AppUpdateStatus =
+  | "unsupported"
+  | "idle"
+  | "checking"
+  | "up-to-date"
+  | "available"
+  | "downloading"
+  | "downloaded"
+  | "installing"
+  | "error";
+
+export interface AppUpdateState {
+  status: AppUpdateStatus;
+  currentVersion: string;
+  availableVersion?: string;
+  progress: number;
+  message: string;
+  error?: string;
+}
+
 export interface ProviderTestResult {
   ok: boolean;
   message: string;
@@ -127,6 +147,13 @@ export interface DesktopApi {
     saveSettings(settings: AppSettings): Promise<AppSettings>;
     openSource(): Promise<void>;
     openLicense(): Promise<string>;
+  };
+  updates: {
+    getState(): Promise<AppUpdateState>;
+    check(): Promise<AppUpdateState>;
+    download(): Promise<AppUpdateState>;
+    install(): Promise<AppUpdateState>;
+    onState(listener: (state: AppUpdateState) => void): () => void;
   };
   dialog: {
     pickPdfs(): Promise<string[]>;

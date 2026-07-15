@@ -49,6 +49,8 @@ jobs:
           path: |
             desktop/release/PDF2ZH-Desktop-Setup-*.exe
             desktop/release/PDF2ZH-Desktop-Setup-*.exe.sha256
+            desktop/release/PDF2ZH-Desktop-Setup-*.exe.blockmap
+            desktop/release/latest.yml
 
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/desktop-v')
@@ -78,9 +80,15 @@ jobs:
 
             当前安装包未进行商业代码签名，Windows SmartScreen 可能显示“未知发布者”。请确认安装包来自本仓库 Release。需要额外验证文件完整性的用户，可使用随附的 `.sha256` 文件。
 
+            ## 应用内更新
+
+            从支持自动更新的版本开始，可在“设置”页面点击“检查更新”，发现新版本后直接下载并重启安装。`latest.yml` 和 `.blockmap` 是应用自动更新所需的元数据，普通用户不需要手动下载。
+
             ## 项目来源
 
             本项目 fork 自 [guaguastandup/zotero-pdf2zh](https://github.com/guaguastandup/zotero-pdf2zh)，PDF2ZH Desktop 是独立衍生版本，并非上游作者发布或维护的官方桌面客户端。
           files: |
             desktop/release/PDF2ZH-Desktop-Setup-*.exe
             desktop/release/PDF2ZH-Desktop-Setup-*.exe.sha256
+            desktop/release/PDF2ZH-Desktop-Setup-*.exe.blockmap
+            desktop/release/latest.yml

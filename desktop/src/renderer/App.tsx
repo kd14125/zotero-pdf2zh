@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import type {
   AppSettings,
+  AppUpdateState,
   ProviderId,
   ProviderProfile,
   RuntimeState,
@@ -120,6 +121,12 @@ export function App() {
     downloadedBytes: 0,
     totalBytes: 0,
   });
+  const [updateState, setUpdateState] = useState<AppUpdateState>({
+    status: "idle",
+    currentVersion: "0.2.0",
+    progress: 0,
+    message: "可手动检查新版本",
+  });
   const [files, setFiles] = useState<string[]>([]);
   const [options, setOptions] = useState<TranslationOptions>(defaultOptions);
   const [notice, setNotice] = useState<Notice>();
@@ -136,14 +143,21 @@ export function App() {
 
   useEffect(() => {
     const load = async () => {
-      const [loadedSettings, loadedProfiles, loadedTasks, runtimeState, appVersion] =
-        await Promise.all([
-          window.pdf2zh.app.getSettings(),
-          window.pdf2zh.providers.list(),
-          window.pdf2zh.tasks.list(),
-          window.pdf2zh.runtime.getState(),
-          window.pdf2zh.app.getVersion(),
-        ]);
+      const [
+        loadedSettings,
+        loadedProfiles,
+        loadedTasks,
+        runtimeState,
+        loadedUpdateState,
+        appVersion,
+      ] = await Promise.all([
+        window.pdf2zh.app.getSettings(),
+        window.pdf2zh.providers.list(),
+        window.pdf2zh.tasks.list(),
+        window.pdf2zh.runtime.getState(),
+        window.pdf2zh.updates.getState(),
+        window.pdf2zh.app.getVersion(),
+      ]);
       let nextProfiles = loadedProfiles;
       if (!nextProfiles.length) {
         const now = new Date().toISOString();
@@ -167,14 +181,17 @@ export function App() {
       setProfiles(nextProfiles);
       setTasks(loadedTasks);
       setRuntime(runtimeState);
+      setUpdateState(loadedUpdateState);
       setVersion(appVersion);
     };
     void load().catch((error) => showError(error, setNotice));
     const offRuntime = window.pdf2zh.runtime.onState(setRuntime);
     const offTasks = window.pdf2zh.tasks.onChanged(setTasks);
+    const offUpdates = window.pdf2zh.updates.onState(setUpdateState);
     return () => {
       offRuntime();
       offTasks();
+      offUpdates();
     };
   }, []);
 
@@ -272,6 +289,8 @@ export function App() {
             profiles={profiles}
             settings={settings}
             version={version}
+            updateState={updateState}
+            activeTaskCount={activeTasks.length}
             refresh={async () => setProfiles(await window.pdf2zh.providers.list())}
             saveSettings={saveSettings}
             notify={setNotice}
@@ -804,6 +823,8 @@ function SettingsView({
   profiles,
   settings,
   version,
+  updateState,
+  activeTaskCount,
   refresh,
   saveSettings,
   notify,
@@ -811,6 +832,8 @@ function SettingsView({
   profiles: ProviderProfile[];
   settings: AppSettings;
   version: string;
+  updateState: AppUpdateState;
+  activeTaskCount: number;
   refresh: () => Promise<void>;
   saveSettings: (patch: Partial<AppSettings>) => Promise<void>;
   notify: (notice: Notice) => void;
@@ -919,6 +942,49 @@ function SettingsView({
       showError(error, notify);
     }
   };
+  const updateAction = async () => {
+    try {
+      if (updateState.status === "available") {
+        await window.pdf2zh.updates.download();
+      } else if (updateState.status === "downloaded") {
+        if (activeTaskCount > 0) {
+          notify({ type: "error", text: "请先完成或取消正在运行的翻译任务" });
+          return;
+        }
+        await window.pdf2zh.updates.install();
+      } else {
+        await window.pdf2zh.updates.check();
+      }
+    } catch (error) {
+      showError(error, notify);
+    }
+  };
+  const updateBusy = ["checking", "downloading", "installing"].includes(updateState.status);
+  const updateUnsupported = updateState.status === "unsupported";
+  const updateBlocked = updateState.status === "downloaded" && activeTaskCount > 0;
+  const updateLabel =
+    updateState.status === "available"
+      ? `下载 v${updateState.availableVersion}`
+      : updateState.status === "downloaded"
+        ? updateBlocked
+          ? "等待任务结束"
+          : "重启安装"
+        : updateState.status === "checking"
+          ? "正在检查"
+          : updateState.status === "downloading"
+            ? `下载 ${updateState.progress}%`
+            : updateState.status === "installing"
+              ? "正在安装"
+              : updateState.status === "up-to-date"
+                ? "再次检查"
+                : updateState.status === "error"
+                  ? "重试检查"
+                  : updateUnsupported
+                    ? "仅安装版支持"
+                    : "检查更新";
+  const updateMessage = updateBlocked
+    ? "更新已下载，请先完成或取消正在运行的翻译任务"
+    : updateState.message;
   return (
     <div className="page">
       <PageHeader
@@ -1073,9 +1139,24 @@ function SettingsView({
       <section className="about-band">
         <div>
           <strong>PDF2ZH Desktop {version}</strong>
-          <span>AGPL-3.0-or-later · 基于 PDFMathTranslate-next</span>
+          <span>{updateMessage}</span>
         </div>
-        <div>
+        <div className="about-actions">
+          <button
+            className="secondary-button"
+            disabled={updateBusy || updateUnsupported || updateBlocked}
+            title={updateMessage}
+            onClick={() => void updateAction()}
+          >
+            {updateState.status === "available" ? (
+              <Download size={15} />
+            ) : updateBusy ? (
+              <LoaderCircle className="spin" size={15} />
+            ) : (
+              <RefreshCw size={15} />
+            )}
+            {updateLabel}
+          </button>
           <button className="text-button" onClick={() => void window.pdf2zh.app.openLicense()}>
             开源许可证
           </button>

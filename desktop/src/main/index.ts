@@ -1,4 +1,5 @@
 import { app, BrowserWindow, net, protocol } from "electron";
+import updaterPackage from "electron-updater";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -8,6 +9,7 @@ import { ProviderRepository } from "./providers";
 import { RuntimeManager } from "./runtime-manager";
 import { JsonStore } from "./store";
 import { TaskManager } from "./task-manager";
+import { UpdateManager } from "./update-manager";
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -18,6 +20,7 @@ protocol.registerSchemesAsPrivileged([
 
 let mainWindow: BrowserWindow | undefined;
 let taskManager: TaskManager | undefined;
+const { autoUpdater } = updaterPackage;
 
 async function bootstrap(): Promise<void> {
   const previewFiles = new Map<string, string>();
@@ -26,10 +29,15 @@ async function bootstrap(): Promise<void> {
   await Promise.all([store.load(), credentials.load()]);
   const providers = new ProviderRepository(store, credentials);
   const runtime = new RuntimeManager(() => store.getSettings());
+  const updates = new UpdateManager(
+    autoUpdater,
+    app.isPackaged && process.platform === "win32",
+    app.getVersion(),
+  );
   await runtime.initialize();
   await rm(join(app.getPath("temp"), "pdf2zh-desktop"), { recursive: true, force: true });
   taskManager = new TaskManager(store, providers, runtime);
-  registerIpc({ store, providers, runtime, tasks: taskManager, previewFiles });
+  registerIpc({ store, providers, runtime, tasks: taskManager, updates, previewFiles });
 
   protocol.handle("pdf2zh-file", (request) => {
     const url = new URL(request.url);

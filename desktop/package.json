@@ -20,6 +20,7 @@
     "verify": "npm run typecheck && npm run lint && npm run format:check && npm test"
   },
   "dependencies": {
+    "electron-updater": "^6.8.9",
     "extract-zip": "^2.0.1",
     "lucide-react": "^1.24.0",
     "node-pty": "^1.1.0",
@@ -70,6 +71,14 @@
     ],
     "asarUnpack": [
       "node_modules/node-pty/**/*"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "kd14125",
+        "repo": "zotero-pdf2zh",
+        "releaseType": "release"
+      }
     ],
     "win": {
       "icon": "assets/icon.ico",

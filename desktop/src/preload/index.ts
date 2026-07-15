@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron";
 import { channels } from "../shared/channels";
-import type { DesktopApi, RuntimeState, TaskRecord } from "../shared/types";
+import type { AppUpdateState, DesktopApi, RuntimeState, TaskRecord } from "../shared/types";
 
 const api: DesktopApi = {
   app: {
@@ -9,6 +9,13 @@ const api: DesktopApi = {
     saveSettings: (settings) => ipcRenderer.invoke(channels.settingsSave, settings),
     openSource: () => ipcRenderer.invoke(channels.appOpenSource),
     openLicense: () => ipcRenderer.invoke(channels.appOpenLicense),
+  },
+  updates: {
+    getState: () => ipcRenderer.invoke(channels.updateState),
+    check: () => ipcRenderer.invoke(channels.updateCheck),
+    download: () => ipcRenderer.invoke(channels.updateDownload),
+    install: () => ipcRenderer.invoke(channels.updateInstall),
+    onState: (listener) => subscribe<AppUpdateState>(channels.updateChanged, listener),
   },
   dialog: {
     pickPdfs: () => ipcRenderer.invoke(channels.dialogPdfs),
