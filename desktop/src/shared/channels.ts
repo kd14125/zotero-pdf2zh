@@ -10,6 +10,7 @@ export const channels = {
   providersSave: "providers:save",
   providersRemove: "providers:remove",
   providersTest: "providers:test",
+  providersModels: "providers:models",
   runtimeState: "runtime:state",
   runtimeEnsure: "runtime:ensure",
   runtimeCheckUpdate: "runtime:check-update",

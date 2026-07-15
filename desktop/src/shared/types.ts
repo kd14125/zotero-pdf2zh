@@ -103,6 +103,12 @@ export interface ProviderTestResult {
   latencyMs?: number;
 }
 
+export interface ProviderModelsResult {
+  ok: boolean;
+  message: string;
+  models: string[];
+}
+
 export interface EnqueueRequest {
   inputPaths: string[];
   profileId: string;
@@ -131,6 +137,7 @@ export interface DesktopApi {
     save(profile: ProviderProfile): Promise<ProviderProfile>;
     remove(id: string): Promise<void>;
     test(profile: ProviderProfile): Promise<ProviderTestResult>;
+    listModels(profile: ProviderProfile): Promise<ProviderModelsResult>;
   };
   runtime: {
     getState(): Promise<RuntimeState>;

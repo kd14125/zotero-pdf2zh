@@ -33,6 +33,9 @@ npm run package
 - API Key：Electron `safeStorage` / Windows DPAPI 加密
 - 翻译结果：默认位于原 PDF 旁的 `PDF2ZH-翻译结果`
 
+每条翻译服务配置使用独立 ID 保存 API Key、Base URL 和模型，可在设置页左侧列表中切换。
+模型字段支持手动输入，也可以通过当前配置的 API 获取模型列表。
+
 任务执行时会创建短生命周期 TOML 配置，完成、失败或取消后均删除。日志和历史记录不会保存
 API Key。
 

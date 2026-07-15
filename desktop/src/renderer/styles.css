@@ -817,6 +817,16 @@ h2 {
 .form-grid .full {
   grid-column: 1 / -1;
 }
+.model-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+.model-picker .secondary-button {
+  min-height: 36px;
+  padding: 7px 10px;
+  white-space: nowrap;
+}
 .security-note {
   display: flex;
   align-items: center;
