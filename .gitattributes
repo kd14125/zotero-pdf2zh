@@ -1,3 +1,9 @@
 # 只锁定这两个批处理脚本为 CRLF
 /server/install-with-conda.bat text eol=crlf
 /server/install-with-uv.bat    text eol=crlf
+
+# 桌面端由 Prettier 统一使用 LF，确保 Windows CI 检出结果一致
+/desktop/** text=auto eol=lf
+/desktop/assets/*.ico binary
+/desktop/assets/*.png binary
+/.github/workflows/desktop-release.yml text eol=lf
