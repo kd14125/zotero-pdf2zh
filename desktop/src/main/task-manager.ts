@@ -285,6 +285,7 @@ export function buildCliArgs(
   ];
   if (!options.outputMono) args.push("--no-mono");
   if (!options.outputDual) args.push("--no-dual");
+  if (provider === "siliconflowfree") args.push("--disable-rich-text-translate");
   if (options.translateFirst) args.push("--dual-translate-first");
   if (options.dualMode === "TB") args.push("--use-alternating-pages-dual");
   if (options.ocrWorkaround) args.push("--ocr-workaround");

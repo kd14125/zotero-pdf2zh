@@ -26,6 +26,10 @@ npm run package
 安装包生成在 `desktop/release/`。安装包不包含约 630 MB 的翻译运行时；首次启动由运行时页面
 下载固定版本、校验 SHA-256 后解压到用户数据目录。
 
+v0.2.2 已使用内置 SiliconFlowFree 服务对 11 页公开论文完成端到端翻译验证。输出 PDF 保持
+11 页，抽查第 1、6、11 页无空白、正文重叠或内部样式标签。SiliconFlowFree 会自动追加
+`--disable-rich-text-translate`，避免服务将 PDF2ZH 内部富文本标签翻译进正文。
+
 ## 数据与密钥
 
 - 应用配置：`%APPDATA%/PDF2ZH Desktop`
