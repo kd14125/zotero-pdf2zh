@@ -56,9 +56,31 @@ jobs:
         with:
           generate_release_notes: true
           body: |
-            Windows 10/11 x64 联网安装版。首次启动会下载并校验固定版本的 PDF2ZH Next 运行时。
+            # PDF2ZH Desktop
 
-            当前安装包未进行商业代码签名，Windows SmartScreen 可能显示未知发布者。请使用随附的 SHA-256 文件核对完整性。
+            无需安装 Zotero、Python、uv 或 conda 的 Windows PDF 翻译桌面客户端。
+
+            ## 下载与安装
+
+            **普通用户只需在 Assets 中下载 `PDF2ZH-Desktop-Setup-版本号.exe`，然后双击安装。**
+
+            - `.sha256` 是供高级用户手动校验安装包完整性使用的可选文件，不需要下载也不影响安装和运行。
+            - `Source code` 是 GitHub 自动生成的源码压缩包，不是 Windows 安装包。
+            - 安装包适用于 Windows 10/11 x64。
+
+            ## 首次启动
+
+            首次启动后，软件会通过图形界面下载、校验并解压固定版本的 PDF2ZH Next 运行时。该运行时约 630 MiB，只需准备一次，不需要在浏览器中手动下载。
+
+            运行时准备完成后，在“设置”页面配置翻译服务，然后即可拖入 PDF 开始翻译。SiliconFlowFree 无需 API Key，可用于快速体验。
+
+            ## Windows 安全提示
+
+            当前安装包未进行商业代码签名，Windows SmartScreen 可能显示“未知发布者”。请确认安装包来自本仓库 Release。需要额外验证文件完整性的用户，可使用随附的 `.sha256` 文件。
+
+            ## 项目来源
+
+            本项目 fork 自 [guaguastandup/zotero-pdf2zh](https://github.com/guaguastandup/zotero-pdf2zh)，PDF2ZH Desktop 是独立衍生版本，并非上游作者发布或维护的官方桌面客户端。
           files: |
             desktop/release/PDF2ZH-Desktop-Setup-*.exe
             desktop/release/PDF2ZH-Desktop-Setup-*.exe.sha256
