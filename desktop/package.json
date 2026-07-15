@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
-    "package": "npm run build && electron-builder --win nsis",
+    "package": "npm run build && electron-builder --win nsis --publish never",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "playwright test",
