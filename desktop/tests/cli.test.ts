@@ -37,6 +37,18 @@ describe("CLI mapping", () => {
     expect(args).not.toContain("--no-mono");
   });
 
+  it("disables rich text translation for SiliconFlow Free", () => {
+    const args = buildCliArgs(
+      "I:/论文/paper.pdf",
+      "I:/输出",
+      "I:/临时/config.toml",
+      "siliconflowfree",
+      options,
+    );
+
+    expect(args).toContain("--disable-rich-text-translate");
+  });
+
   it("builds the correct OpenAI-compatible TOML shape", () => {
     const now = new Date().toISOString();
     const profile: ProviderProfile & { apiKey: string } = {
