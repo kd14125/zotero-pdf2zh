@@ -1,0 +1,95 @@
+{
+  "name": "pdf2zh-desktop",
+  "version": "0.1.0",
+  "description": "PDF2ZH Windows desktop client",
+  "license": "AGPL-3.0-or-later",
+  "author": "kd14125",
+  "homepage": "https://github.com/kd14125/zotero-pdf2zh",
+  "main": "./out/main/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "npm run typecheck && electron-vite build",
+    "package": "npm run build && electron-builder --win nsis",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "playwright test",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "verify": "npm run typecheck && npm run lint && npm run format:check && npm test"
+  },
+  "dependencies": {
+    "extract-zip": "^2.0.1",
+    "lucide-react": "^1.24.0",
+    "node-pty": "^1.1.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "smol-toml": "^1.7.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "electron": "^43.1.1",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "^5.0.0",
+    "eslint": "^9.39.2",
+    "jsdom": "^29.1.1",
+    "prettier": "^3.9.5",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.64.0",
+    "vite": "^7.3.6",
+    "vitest": "^4.1.10"
+  },
+  "build": {
+    "npmRebuild": false,
+    "appId": "com.kd14125.pdf2zh.desktop",
+    "productName": "PDF2ZH Desktop",
+    "artifactName": "PDF2ZH-Desktop-Setup-${version}.${ext}",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "runtime-manifest.json",
+        "to": "runtime-manifest.json"
+      },
+      {
+        "from": "../LICENSE",
+        "to": "LICENSE.txt"
+      }
+    ],
+    "asarUnpack": [
+      "node_modules/node-pty/**/*"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "verifyUpdateCodeSignature": false
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false,
+      "shortcutName": "PDF2ZH Desktop"
+    }
+  }
+}
