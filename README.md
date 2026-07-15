@@ -11,9 +11,12 @@
 [![License](https://img.shields.io/badge/License-AGPL--3.0--or--later-555?style=flat-square)](./LICENSE)
 [![Upstream](https://img.shields.io/badge/Forked%20from-guaguastandup%2Fzotero--pdf2zh-24292F?style=flat-square&logo=github)](https://github.com/guaguastandup/zotero-pdf2zh)
 
-[下载安装包](https://github.com/kd14125/zotero-pdf2zh/releases/download/desktop-v0.1.1/PDF2ZH-Desktop-Setup-0.1.1.exe)
-· [查看 Release](https://github.com/kd14125/zotero-pdf2zh/releases/tag/desktop-v0.1.1)
-· [安装包 SHA-256](https://github.com/kd14125/zotero-pdf2zh/releases/download/desktop-v0.1.1/PDF2ZH-Desktop-Setup-0.1.1.exe.sha256)
+[![直接下载 Windows 安装包](https://img.shields.io/badge/直接下载-Windows%20安装包-2E7D32?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kd14125/zotero-pdf2zh/releases/download/desktop-v0.1.1/PDF2ZH-Desktop-Setup-0.1.1.exe)
+
+**普通用户只需下载并运行 `.exe`，不需要下载 `.sha256` 文件。**
+
+[查看版本说明](https://github.com/kd14125/zotero-pdf2zh/releases/tag/desktop-v0.1.1)
+· [SHA-256 校验文件（高级用户可选）](https://github.com/kd14125/zotero-pdf2zh/releases/download/desktop-v0.1.1/PDF2ZH-Desktop-Setup-0.1.1.exe.sha256)
 
 </div>
 
@@ -48,16 +51,22 @@ PDF 进行单语或双语翻译，不需要安装 Zotero、Python、uv 或 conda
 
 ### 1. 安装应用
 
-系统要求为 Windows 10/11 x64。下载并运行
-[`PDF2ZH-Desktop-Setup-0.1.1.exe`](https://github.com/kd14125/zotero-pdf2zh/releases/download/desktop-v0.1.1/PDF2ZH-Desktop-Setup-0.1.1.exe)。
+系统要求为 Windows 10/11 x64。点击下方链接下载并运行安装包：
+
+**[直接下载 PDF2ZH Desktop 安装包（`.exe`）](https://github.com/kd14125/zotero-pdf2zh/releases/download/desktop-v0.1.1/PDF2ZH-Desktop-Setup-0.1.1.exe)**
+
+普通用户不需要下载或处理 SHA-256 文件。安装完成后直接启动 PDF2ZH Desktop，软件会通过
+图形界面完成后续运行时下载和校验。
 
 当前安装包未进行商业代码签名，Windows SmartScreen 可能显示“未知发布者”。请从本仓库
-Release 下载，并使用随 Release 发布的 SHA-256 文件核对完整性。
+Release 下载。需要手动验证文件完整性的高级用户，可以使用 Release 中附带的 SHA-256
+校验文件；这不是安装或运行的必要步骤。
 
 ### 2. 准备翻译运行时
 
-首次启动后进入“运行时”页面，下载约 630 MiB 的官方 `with-assets-win64` 运行时。应用会校验
-SHA-256 后再解压；下载中断可以继续，校验失败的文件不会被执行。
+首次启动后按“运行时”页面提示准备约 630 MiB 的官方 `with-assets-win64` 运行时。下载、
+SHA-256 校验和解压均由软件自动完成，不需要在浏览器中另外下载文件；下载中断可以继续，
+校验失败的文件不会被执行。
 
 当前固定版本：
 
