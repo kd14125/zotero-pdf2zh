@@ -2,6 +2,7 @@ import { app } from "electron";
 import { EventEmitter } from "node:events";
 import {
   access,
+  cp,
   mkdir,
   open,
   readFile,
@@ -11,10 +12,10 @@ import {
   stat,
   writeFile,
 } from "node:fs/promises";
-import { basename, join, relative } from "node:path";
+import { basename, dirname, join, relative } from "node:path";
 import extract from "extract-zip";
 import type { AppSettings, RuntimeManifest, RuntimeState } from "../shared/types";
-import { sha256File } from "./file-utils";
+import { resolveRuntimeRoot, sha256File } from "./file-utils";
 
 const REMOTE_MANIFEST_URL =
   "https://raw.githubusercontent.com/kd14125/zotero-pdf2zh/main/desktop/runtime-manifest.json";
@@ -24,10 +25,12 @@ export class RuntimeManager extends EventEmitter {
   private state!: RuntimeState;
   private operation?: Promise<RuntimeState>;
   private readonly runtimeRoot: string;
+  private readonly legacyRuntimeRoot: string;
 
   constructor(private readonly getSettings: () => AppSettings) {
     super();
-    this.runtimeRoot = join(app.getPath("userData"), "runtime");
+    this.legacyRuntimeRoot = join(app.getPath("userData"), "runtime");
+    this.runtimeRoot = resolveRuntimeRoot(process.env.LOCALAPPDATA, app.getPath("userData"));
   }
 
   async initialize(): Promise<void> {
@@ -39,6 +42,7 @@ export class RuntimeManager extends EventEmitter {
       downloadedBytes: 0,
       totalBytes: this.manifest.size,
     };
+    await this.migrateLegacyRuntime();
     await mkdir(this.runtimeRoot, { recursive: true });
     await this.refreshInstalledState();
   }
@@ -248,6 +252,19 @@ export class RuntimeManager extends EventEmitter {
     }
   }
 
+  private async migrateLegacyRuntime(): Promise<void> {
+    if (this.runtimeRoot === this.legacyRuntimeRoot) return;
+    if (await pathExists(join(this.runtimeRoot, "current.json"))) return;
+    if (!(await pathExists(join(this.legacyRuntimeRoot, "current.json")))) return;
+    await mkdir(dirname(this.runtimeRoot), { recursive: true });
+    try {
+      await rename(this.legacyRuntimeRoot, this.runtimeRoot);
+    } catch {
+      await cp(this.legacyRuntimeRoot, this.runtimeRoot, { recursive: true });
+      await rm(this.legacyRuntimeRoot, { recursive: true, force: true });
+    }
+  }
+
   private updateState(patch: Partial<RuntimeState>): void {
     this.state = { ...this.state, ...patch };
     this.emitState();
@@ -269,6 +286,15 @@ async function fileSize(path: string): Promise<number> {
     return (await stat(path)).size;
   } catch {
     return 0;
+  }
+}
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
   }
 }
 

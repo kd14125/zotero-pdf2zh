@@ -2,9 +2,18 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { sha256File } from "../src/main/file-utils";
+import { resolveRuntimeRoot, sha256File } from "../src/main/file-utils";
 
 describe("runtime integrity", () => {
+  it("keeps large runtime assets in LocalAppData on Windows", () => {
+    expect(
+      resolveRuntimeRoot(
+        "C:/Users/test/AppData/Local",
+        "C:/Users/test/AppData/Roaming/PDF2ZH Desktop",
+      ),
+    ).toBe(join("C:/Users/test/AppData/Local", "PDF2ZH Desktop", "runtime"));
+  });
+
   it("calculates a deterministic SHA-256 digest", async () => {
     const directory = await mkdtemp(join(tmpdir(), "pdf2zh-hash-"));
     const path = join(directory, "asset.zip");

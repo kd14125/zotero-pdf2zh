@@ -29,7 +29,7 @@ npm run package
 ## 数据与密钥
 
 - 应用配置：`%APPDATA%/PDF2ZH Desktop`
-- 翻译运行时：`%APPDATA%/PDF2ZH Desktop/runtime`
+- 翻译运行时：`%LOCALAPPDATA%/PDF2ZH Desktop/runtime`
 - API Key：Electron `safeStorage` / Windows DPAPI 加密
 - 翻译结果：默认位于原 PDF 旁的 `PDF2ZH-翻译结果`
 
