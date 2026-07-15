@@ -25,6 +25,7 @@ test("desktop shell renders all primary work views", async () => {
     await page.getByRole("button", { name: "设置" }).click();
     await expect(page.getByRole("heading", { name: "设置" })).toBeVisible();
     await expect(page.getByText("API Key 已使用 Windows DPAPI 加密保存在本机。")).toBeVisible();
+    await expect(page.getByRole("button", { name: "仅安装版支持" })).toBeDisabled();
 
     const profileItems = page.locator(".profile-list > button");
     await expect(profileItems).toHaveCount(1);

@@ -14,15 +14,17 @@ import { JsonStore } from "./store";
 import { ProviderRepository } from "./providers";
 import { RuntimeManager } from "./runtime-manager";
 import { TaskManager } from "./task-manager";
+import { UpdateManager } from "./update-manager";
 
 export function registerIpc(options: {
   store: JsonStore;
   providers: ProviderRepository;
   runtime: RuntimeManager;
   tasks: TaskManager;
+  updates: UpdateManager;
   previewFiles: Map<string, string>;
 }): void {
-  const { store, providers, runtime, tasks, previewFiles } = options;
+  const { store, providers, runtime, tasks, updates, previewFiles } = options;
 
   ipcMain.handle(channels.appVersion, () => app.getVersion());
   ipcMain.handle(channels.appOpenSource, async () => {
@@ -40,6 +42,10 @@ export function registerIpc(options: {
     const settings = appSettingsSchema.parse(input);
     return store.setSettings(settings);
   });
+  ipcMain.handle(channels.updateState, () => updates.getState());
+  ipcMain.handle(channels.updateCheck, () => updates.check());
+  ipcMain.handle(channels.updateDownload, () => updates.download());
+  ipcMain.handle(channels.updateInstall, () => updates.install());
 
   ipcMain.handle(channels.dialogPdfs, async () => {
     const result = await dialog.showOpenDialog({
@@ -107,6 +113,7 @@ export function registerIpc(options: {
 
   runtime.on("changed", (state) => broadcast(channels.runtimeChanged, state));
   tasks.on("changed", (records) => broadcast(channels.tasksChanged, records));
+  updates.on("changed", (state) => broadcast(channels.updateChanged, state));
 }
 
 function broadcast(channel: string, payload: unknown): void {

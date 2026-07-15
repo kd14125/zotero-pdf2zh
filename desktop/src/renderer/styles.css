@@ -876,6 +876,11 @@ h2 {
   color: var(--muted);
   font-size: 10px;
 }
+.about-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
 
 .runtime-hero {
   display: grid;

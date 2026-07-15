@@ -36,6 +36,9 @@ npm run package
 每条翻译服务配置使用独立 ID 保存 API Key、Base URL 和模型，可在设置页左侧列表中切换。
 模型字段支持手动输入，也可以通过当前配置的 API 获取模型列表。
 
+应用更新使用 `electron-updater` 和 GitHub Release。Release 必须同时包含安装包、`latest.yml`
+和 `.blockmap`；用户在设置页手动检查、下载并确认重启安装，不执行静默更新。
+
 任务执行时会创建短生命周期 TOML 配置，完成、失败或取消后均删除。日志和历史记录不会保存
 API Key。
 
