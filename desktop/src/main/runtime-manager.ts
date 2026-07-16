@@ -12,10 +12,10 @@ import {
   stat,
   writeFile,
 } from "node:fs/promises";
-import { basename, dirname, join, relative } from "node:path";
+import { basename, join, relative } from "node:path";
 import extract from "extract-zip";
 import type { AppSettings, RuntimeManifest, RuntimeState } from "../shared/types";
-import { resolveRuntimeRoot, sha256File } from "./file-utils";
+import { findReusableRuntime, resolveRuntimeRoots, sha256File } from "./file-utils";
 
 const REMOTE_MANIFEST_URL =
   "https://raw.githubusercontent.com/kd14125/zotero-pdf2zh/main/desktop/runtime-manifest.json";
@@ -25,12 +25,12 @@ export class RuntimeManager extends EventEmitter {
   private state!: RuntimeState;
   private operation?: Promise<RuntimeState>;
   private readonly runtimeRoot: string;
-  private readonly legacyRuntimeRoot: string;
+  private readonly runtimeRoots: string[];
 
   constructor(private readonly getSettings: () => AppSettings) {
     super();
-    this.legacyRuntimeRoot = join(app.getPath("userData"), "runtime");
-    this.runtimeRoot = resolveRuntimeRoot(process.env.LOCALAPPDATA, app.getPath("userData"));
+    this.runtimeRoots = resolveRuntimeRoots(process.env.LOCALAPPDATA, app.getPath("userData"));
+    this.runtimeRoot = this.runtimeRoots[0];
   }
 
   async initialize(): Promise<void> {
@@ -42,7 +42,7 @@ export class RuntimeManager extends EventEmitter {
       downloadedBytes: 0,
       totalBytes: this.manifest.size,
     };
-    await this.migrateLegacyRuntime();
+    await this.reuseInstalledRuntime();
     await mkdir(this.runtimeRoot, { recursive: true });
     await this.refreshInstalledState();
   }
@@ -252,17 +252,39 @@ export class RuntimeManager extends EventEmitter {
     }
   }
 
-  private async migrateLegacyRuntime(): Promise<void> {
-    if (this.runtimeRoot === this.legacyRuntimeRoot) return;
-    if (await pathExists(join(this.runtimeRoot, "current.json"))) return;
-    if (!(await pathExists(join(this.legacyRuntimeRoot, "current.json")))) return;
-    await mkdir(dirname(this.runtimeRoot), { recursive: true });
-    try {
-      await rename(this.legacyRuntimeRoot, this.runtimeRoot);
-    } catch {
-      await cp(this.legacyRuntimeRoot, this.runtimeRoot, { recursive: true });
-      await rm(this.legacyRuntimeRoot, { recursive: true, force: true });
+  private async reuseInstalledRuntime(): Promise<void> {
+    const reusable = await findReusableRuntime(this.runtimeRoots, this.manifest.version);
+    if (!reusable) return;
+    await mkdir(this.runtimeRoot, { recursive: true });
+    if (reusable.root === this.runtimeRoot) {
+      await writeFile(
+        join(this.runtimeRoot, "current.json"),
+        JSON.stringify({ version: reusable.version }),
+        "utf8",
+      );
+      return;
     }
+
+    const targetVersionDirectory = join(this.runtimeRoot, reusable.version);
+    await rm(targetVersionDirectory, { recursive: true, force: true });
+    let copied = false;
+    try {
+      await rename(reusable.versionDirectory, targetVersionDirectory);
+    } catch {
+      await cp(reusable.versionDirectory, targetVersionDirectory, { recursive: true });
+      copied = true;
+    }
+    await writeFile(
+      join(this.runtimeRoot, "current.json"),
+      JSON.stringify({ version: reusable.version }),
+      "utf8",
+    );
+    const migrated = await findReusableRuntime([this.runtimeRoot], reusable.version);
+    if (!migrated || migrated.version !== reusable.version) {
+      throw new Error("已有 PDF2ZH 运行时迁移后校验失败");
+    }
+    if (copied) await rm(reusable.versionDirectory, { recursive: true, force: true });
+    await rm(join(this.runtimeRoot, this.manifest.fileName), { force: true });
   }
 
   private updateState(patch: Partial<RuntimeState>): void {
@@ -286,15 +308,6 @@ async function fileSize(path: string): Promise<number> {
     return (await stat(path)).size;
   } catch {
     return 0;
-  }
-}
-
-async function pathExists(path: string): Promise<boolean> {
-  try {
-    await access(path);
-    return true;
-  } catch {
-    return false;
   }
 }
 

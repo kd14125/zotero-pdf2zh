@@ -821,6 +821,11 @@ h2 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
+  align-items: end;
+}
+.model-inputs {
+  display: grid;
+  gap: 7px;
 }
 .model-picker .secondary-button {
   min-height: 36px;
