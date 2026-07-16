@@ -17,6 +17,12 @@ const api: DesktopApi = {
     install: () => ipcRenderer.invoke(channels.updateInstall),
     onState: (listener) => subscribe<AppUpdateState>(channels.updateChanged, listener),
   },
+  mcp: {
+    getState: () => ipcRenderer.invoke(channels.mcpState),
+    registerCodex: () => ipcRenderer.invoke(channels.mcpRegister),
+    removeCodex: () => ipcRenderer.invoke(channels.mcpRemove),
+    copyManualConfig: () => ipcRenderer.invoke(channels.mcpCopyConfig),
+  },
   dialog: {
     pickPdfs: () => ipcRenderer.invoke(channels.dialogPdfs),
     pickOutputDirectory: () => ipcRenderer.invoke(channels.dialogOutput),

@@ -23,6 +23,7 @@ test("desktop shell renders all primary work views", async () => {
   const userData = await mkdtemp(join(tmpdir(), "pdf2zh-e2e-"));
   const application = await electron.launch({
     args: [resolve("."), `--user-data-dir=${userData}`, "--force-device-scale-factor=1.25"],
+    env: { ...process.env, PDF2ZH_ENGINE_IDLE_TIMEOUT_MS: "1000" },
   });
   try {
     const page = await application.firstWindow();
@@ -41,6 +42,7 @@ test("desktop shell renders all primary work views", async () => {
     await page.getByRole("button", { name: "设置" }).click();
     await expect(page.getByRole("heading", { name: "设置" })).toBeVisible();
     await expect(page.getByText("API Key 已使用 Windows DPAPI 加密保存在本机。")).toBeVisible();
+    await expect(page.getByText("Codex MCP", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "仅安装版支持" })).toBeDisabled();
 
     const profileItems = page.locator(".profile-list > button");
@@ -111,7 +113,11 @@ test("desktop update reuses a complete runtime from the legacy user-data directo
     args: packagedExecutable
       ? [`--user-data-dir=${userData}`]
       : [resolve("."), `--user-data-dir=${userData}`],
-    env: { ...process.env, LOCALAPPDATA: localAppData },
+    env: {
+      ...process.env,
+      LOCALAPPDATA: localAppData,
+      PDF2ZH_ENGINE_IDLE_TIMEOUT_MS: "1000",
+    },
   });
   try {
     const page = await application.firstWindow();

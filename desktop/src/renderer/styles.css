@@ -859,6 +859,49 @@ h2 {
   gap: 8px;
   margin-top: 18px;
 }
+.mcp-band {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  background: #eef2f5;
+  border: 1px solid #dce2e7;
+  border-radius: 7px;
+}
+.mcp-symbol {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  color: #687581;
+  background: #ffffff;
+  border: 1px solid #d8e0e6;
+  border-radius: 6px;
+}
+.mcp-symbol.connected {
+  color: #176947;
+  background: #e8f5ef;
+  border-color: #bfe2d2;
+}
+.mcp-summary strong,
+.mcp-summary span {
+  display: block;
+}
+.mcp-summary strong {
+  font-size: 12px;
+}
+.mcp-summary span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.mcp-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
 .about-band {
   display: flex;
   align-items: center;

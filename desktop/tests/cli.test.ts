@@ -3,7 +3,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { ProviderProfile, TranslationOptions } from "../src/shared/types";
-import { buildCliArgs, buildProviderConfig, uniqueDestination } from "../src/main/task-manager";
+import {
+  buildCliArgs,
+  buildProviderConfig,
+  extractRuntimeFailure,
+  uniqueDestination,
+} from "../src/main/task-manager";
 
 const options: TranslationOptions = {
   sourceLanguage: "en",
@@ -22,6 +27,14 @@ const options: TranslationOptions = {
 };
 
 describe("CLI mapping", () => {
+  it("surfaces an insufficient provider balance even when the runtime exits with code zero", () => {
+    expect(
+      extractRuntimeFailure([
+        "openai.PermissionDeniedError: Error code: 403 - Sorry, your account balance is insufficient",
+      ]),
+    ).toBe("API 账户余额不足（HTTP 403），请充值或切换翻译配置");
+  });
+
   it("maps paths and translation options to discrete arguments", () => {
     const args = buildCliArgs(
       "I:/论文/a b.pdf",

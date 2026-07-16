@@ -1,30 +1,20 @@
-import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
+import { app, BrowserWindow, clipboard, dialog, ipcMain, shell } from "electron";
 import { randomUUID } from "node:crypto";
 import { extname, join } from "node:path";
-import {
-  appSettingsSchema,
-  enqueueRequestSchema,
-  idSchema,
-  pathSchema,
-  providerProfileSchema,
-} from "../shared/schemas";
+import { pathSchema } from "../shared/schemas";
 import { channels } from "../shared/channels";
-import type { PreviewResult } from "../shared/types";
-import { JsonStore } from "./store";
-import { ProviderRepository } from "./providers";
-import { RuntimeManager } from "./runtime-manager";
-import { TaskManager } from "./task-manager";
+import type { PreviewResult, TaskRecord } from "../shared/types";
+import { CodexIntegration } from "./codex-integration";
+import { EngineClient } from "./engine-client";
 import { UpdateManager } from "./update-manager";
 
 export function registerIpc(options: {
-  store: JsonStore;
-  providers: ProviderRepository;
-  runtime: RuntimeManager;
-  tasks: TaskManager;
+  engine: EngineClient;
+  codex: CodexIntegration;
   updates: UpdateManager;
   previewFiles: Map<string, string>;
 }): void {
-  const { store, providers, runtime, tasks, updates, previewFiles } = options;
+  const { engine, codex, updates, previewFiles } = options;
 
   ipcMain.handle(channels.appVersion, () => app.getVersion());
   ipcMain.handle(channels.appOpenSource, async () => {
@@ -37,15 +27,26 @@ export function registerIpc(options: {
         : join(app.getAppPath(), "../LICENSE"),
     ),
   );
-  ipcMain.handle(channels.settingsGet, () => store.getSettings());
-  ipcMain.handle(channels.settingsSave, async (_event, input) => {
-    const settings = appSettingsSchema.parse(input);
-    return store.setSettings(settings);
-  });
+  ipcMain.handle(channels.settingsGet, () => engine.request("settings.get"));
+  ipcMain.handle(channels.settingsSave, (_event, input) => engine.request("settings.save", input));
   ipcMain.handle(channels.updateState, () => updates.getState());
   ipcMain.handle(channels.updateCheck, () => updates.check());
   ipcMain.handle(channels.updateDownload, () => updates.download());
-  ipcMain.handle(channels.updateInstall, () => updates.install());
+  ipcMain.handle(channels.updateInstall, async () => {
+    const tasks = await engine.request<TaskRecord[]>("tasks.list");
+    if (tasks.some((task) => task.status === "queued" || task.status === "running")) {
+      throw new Error("请先完成或取消正在运行的翻译任务");
+    }
+    await engine.request("engine.shutdown");
+    return updates.install();
+  });
+  ipcMain.handle(channels.mcpState, () => codex.getState());
+  ipcMain.handle(channels.mcpRegister, () => codex.register());
+  ipcMain.handle(channels.mcpRemove, () => codex.remove());
+  ipcMain.handle(channels.mcpCopyConfig, async () => {
+    clipboard.writeText(codex.manualConfig());
+    return codex.getState();
+  });
 
   ipcMain.handle(channels.dialogPdfs, async () => {
     const result = await dialog.showOpenDialog({
@@ -63,38 +64,32 @@ export function registerIpc(options: {
     return result.canceled ? undefined : result.filePaths[0];
   });
 
-  ipcMain.handle(channels.providersList, () => providers.list());
-  ipcMain.handle(channels.providersSave, async (_event, input) =>
-    providers.save(providerProfileSchema.parse(input)),
+  ipcMain.handle(channels.providersList, () => engine.request("providers.list"));
+  ipcMain.handle(channels.providersSave, (_event, input) =>
+    engine.request("providers.save", input),
   );
-  ipcMain.handle(channels.providersRemove, async (_event, input) =>
-    providers.remove(idSchema.parse(input)),
+  ipcMain.handle(channels.providersRemove, (_event, input) =>
+    engine.request("providers.remove", input),
   );
-  ipcMain.handle(channels.providersTest, async (_event, input) =>
-    providers.test(providerProfileSchema.parse(input)),
+  ipcMain.handle(channels.providersTest, (_event, input) =>
+    engine.request("providers.test", input),
   );
-  ipcMain.handle(channels.providersModels, async (_event, input) =>
-    providers.listModels(providerProfileSchema.parse(input)),
+  ipcMain.handle(channels.providersModels, (_event, input) =>
+    engine.request("providers.models", input),
   );
 
-  ipcMain.handle(channels.runtimeState, () => runtime.getState());
-  ipcMain.handle(channels.runtimeEnsure, () => runtime.ensureInstalled());
-  ipcMain.handle(channels.runtimeCheckUpdate, () => runtime.checkForUpdate());
-  ipcMain.handle(channels.runtimeUpdate, () => runtime.update());
-  ipcMain.handle(channels.runtimeRollback, () => runtime.rollback());
+  ipcMain.handle(channels.runtimeState, () => engine.request("runtime.state"));
+  ipcMain.handle(channels.runtimeEnsure, () => engine.request("runtime.ensure"));
+  ipcMain.handle(channels.runtimeCheckUpdate, () => engine.request("runtime.check-update"));
+  ipcMain.handle(channels.runtimeUpdate, () => engine.request("runtime.update"));
+  ipcMain.handle(channels.runtimeRollback, () => engine.request("runtime.rollback"));
 
-  ipcMain.handle(channels.tasksList, () => tasks.list());
-  ipcMain.handle(channels.tasksEnqueue, async (_event, input) =>
-    tasks.enqueue(enqueueRequestSchema.parse(input)),
-  );
-  ipcMain.handle(channels.tasksCancel, async (_event, input) =>
-    tasks.cancel(idSchema.parse(input)),
-  );
-  ipcMain.handle(channels.tasksRetry, async (_event, input) => tasks.retry(idSchema.parse(input)));
-  ipcMain.handle(channels.tasksRemove, async (_event, input) =>
-    tasks.remove(idSchema.parse(input)),
-  );
-  ipcMain.handle(channels.tasksClearHistory, () => tasks.clearHistory());
+  ipcMain.handle(channels.tasksList, () => engine.request("tasks.list"));
+  ipcMain.handle(channels.tasksEnqueue, (_event, input) => engine.request("tasks.enqueue", input));
+  ipcMain.handle(channels.tasksCancel, (_event, input) => engine.request("tasks.cancel", input));
+  ipcMain.handle(channels.tasksRetry, (_event, input) => engine.request("tasks.retry", input));
+  ipcMain.handle(channels.tasksRemove, (_event, input) => engine.request("tasks.remove", input));
+  ipcMain.handle(channels.tasksClearHistory, () => engine.request("tasks.clear-history"));
 
   ipcMain.handle(channels.fileOpen, async (_event, input) => {
     const path = pathSchema.parse(input);
@@ -111,8 +106,8 @@ export function registerIpc(options: {
     return { url: `pdf2zh-file://preview/${token}`, name: path.split(/[\\/]/).at(-1) || "PDF" };
   });
 
-  runtime.on("changed", (state) => broadcast(channels.runtimeChanged, state));
-  tasks.on("changed", (records) => broadcast(channels.tasksChanged, records));
+  engine.onEvent("runtime.changed", (state) => broadcast(channels.runtimeChanged, state));
+  engine.onEvent("tasks.changed", (records) => broadcast(channels.tasksChanged, records));
   updates.on("changed", (state) => broadcast(channels.updateChanged, state));
 }
 
