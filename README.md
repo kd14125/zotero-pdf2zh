@@ -20,6 +20,16 @@
 
 </div>
 
+## 界面预览
+
+**PDF 翻译工作台：拖入文档后可集中设置翻译服务、语言、输出格式、OCR、QPS 和结果目录。**
+
+![PDF2ZH Desktop PDF 翻译工作台](./docs/images/desktop-translation-workspace.png)
+
+**双语 PDF 输出：保留原始论文的公式、图表和版面，并提供译文与原文对照。**
+
+![PDF2ZH Desktop 双语 PDF 输出效果](./docs/images/bilingual-pdf-output.png)
+
 ## 项目简介
 
 PDF2ZH Desktop 将 [PDFMathTranslate Next](https://github.com/PDFMathTranslate-next/PDFMathTranslate-next)
