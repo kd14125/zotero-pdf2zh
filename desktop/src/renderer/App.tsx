@@ -3,11 +3,13 @@ import {
   Activity,
   AlertCircle,
   Archive,
+  Bot,
   Check,
   ChevronDown,
   ChevronUp,
   CircleStop,
   Clock3,
+  Copy,
   Download,
   Eye,
   FilePlus2,
@@ -16,6 +18,7 @@ import {
   Gauge,
   History,
   KeyRound,
+  Link,
   Languages,
   LoaderCircle,
   Play,
@@ -27,11 +30,13 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Trash2,
+  Unplug,
   X,
 } from "lucide-react";
 import type {
   AppSettings,
   AppUpdateState,
+  McpIntegrationState,
   ProviderId,
   ProviderProfile,
   RuntimeState,
@@ -845,6 +850,14 @@ function SettingsView({
   const [testing, setTesting] = useState(false);
   const [loadingModels, setLoadingModels] = useState(false);
   const [modelOptions, setModelOptions] = useState<string[]>([]);
+  const [mcpState, setMcpState] = useState<McpIntegrationState>({
+    available: false,
+    codexAvailable: false,
+    registered: false,
+    args: [],
+    message: "正在检测 MCP 组件",
+  });
+  const [mcpBusy, setMcpBusy] = useState(false);
   useEffect(() => {
     if (selected) {
       setDraft(selected);
@@ -854,6 +867,33 @@ function SettingsView({
       setSelectedId(profiles[0].id);
     }
   }, [profiles, selected, selectedId]);
+  useEffect(() => {
+    void window.pdf2zh.mcp
+      .getState()
+      .then(setMcpState)
+      .catch((error) => showError(error, notify));
+  }, [notify]);
+  const mcpAction = async (kind: "refresh" | "register" | "remove" | "copy") => {
+    setMcpBusy(true);
+    try {
+      const state =
+        kind === "register"
+          ? await window.pdf2zh.mcp.registerCodex()
+          : kind === "remove"
+            ? await window.pdf2zh.mcp.removeCodex()
+            : kind === "copy"
+              ? await window.pdf2zh.mcp.copyManualConfig()
+              : await window.pdf2zh.mcp.getState();
+      setMcpState(state);
+      if (kind === "register") notify({ type: "success", text: "PDF2ZH MCP 已接入 Codex" });
+      if (kind === "remove") notify({ type: "info", text: "已取消 Codex MCP 接入" });
+      if (kind === "copy") notify({ type: "success", text: "手动配置已复制" });
+    } catch (error) {
+      showError(error, notify);
+    } finally {
+      setMcpBusy(false);
+    }
+  };
   const changeProvider = (provider: ProviderId) => {
     const def = providerDefinitions[provider];
     setDraft({
@@ -1147,6 +1187,52 @@ function SettingsView({
           </div>
         </section>
       </div>
+      <section className="mcp-band">
+        <div className={`mcp-symbol ${mcpState.registered ? "connected" : ""}`}>
+          <Bot size={22} />
+        </div>
+        <div className="mcp-summary">
+          <strong>Codex MCP</strong>
+          <span>{mcpState.message}</span>
+        </div>
+        <div className="mcp-actions">
+          <button
+            className="icon-button"
+            title="重新检测"
+            disabled={mcpBusy}
+            onClick={() => void mcpAction("refresh")}
+          >
+            <RefreshCw className={mcpBusy ? "spin" : ""} size={16} />
+          </button>
+          <button
+            className="secondary-button"
+            disabled={mcpBusy || !mcpState.available}
+            onClick={() => void mcpAction("copy")}
+          >
+            <Copy size={15} />
+            复制配置
+          </button>
+          {mcpState.registered ? (
+            <button
+              className="secondary-button danger-text"
+              disabled={mcpBusy || !mcpState.codexAvailable}
+              onClick={() => void mcpAction("remove")}
+            >
+              <Unplug size={15} />
+              取消接入
+            </button>
+          ) : (
+            <button
+              className="primary-button"
+              disabled={mcpBusy || !mcpState.available || !mcpState.codexAvailable}
+              onClick={() => void mcpAction("register")}
+            >
+              <Link size={15} />
+              接入 Codex
+            </button>
+          )}
+        </div>
+      </section>
       <section className="about-band">
         <div>
           <strong>PDF2ZH Desktop {version}</strong>

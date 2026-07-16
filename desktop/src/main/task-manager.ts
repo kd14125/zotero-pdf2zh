@@ -150,6 +150,7 @@ export class TaskManager extends EventEmitter {
     await this.persistAndEmit();
     try {
       const profile = this.providers.resolve(task.profileId);
+      await this.runtime.ensureInstalled();
       const binary = this.runtime.getBinaryPath();
       await mkdir(stagingOutput, { recursive: true });
       const config = buildProviderConfig(profile);
@@ -167,7 +168,9 @@ export class TaskManager extends EventEmitter {
       if (this.currentStatus(task.id) === "cancelled") throw new CancelledError();
       if (exitCode !== 0) throw new Error(`PDF2ZH 进程退出，代码 ${exitCode}`);
       const generated = await collectPdfs(stagingOutput);
-      if (!generated.length) throw new Error("翻译进程未生成 PDF 文件");
+      if (!generated.length) {
+        throw new Error(extractRuntimeFailure(task.logs) || "翻译进程未生成 PDF 文件");
+      }
       const outputRoot =
         task.options.outputDirectory || join(dirname(task.inputPath), "PDF2ZH-翻译结果");
       await mkdir(outputRoot, { recursive: true });
@@ -348,6 +351,18 @@ export function buildProviderConfig(
       break;
   }
   return { [`${profile.provider}_detail`]: { ...section, ...profile.extra } };
+}
+
+export function extractRuntimeFailure(logs: string[]): string | undefined {
+  const combined = logs.slice(-80).join("\n");
+  if (/403[\s\S]{0,300}(balance is insufficient|insufficient balance)/i.test(combined)) {
+    return "API 账户余额不足（HTTP 403），请充值或切换翻译配置";
+  }
+  const candidates = logs
+    .map((line) => line.trim())
+    .filter((line) => /(Error code:\s*\d+|\w+Error:|HTTP\s+[45]\d\d)/i.test(line));
+  const last = candidates.at(-1);
+  return last ? `PDF2ZH 翻译失败：${last}` : undefined;
 }
 
 function providerDisplayName(provider: ProviderProfile["provider"]): string {

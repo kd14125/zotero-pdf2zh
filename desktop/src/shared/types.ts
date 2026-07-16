@@ -129,6 +129,23 @@ export interface ProviderModelsResult {
   models: string[];
 }
 
+export interface EngineStatus {
+  connected: boolean;
+  version: string;
+  pid?: number;
+  activeTaskCount: number;
+  runtime: RuntimeState;
+}
+
+export interface McpIntegrationState {
+  available: boolean;
+  codexAvailable: boolean;
+  registered: boolean;
+  command?: string;
+  args: string[];
+  message: string;
+}
+
 export interface EnqueueRequest {
   inputPaths: string[];
   profileId: string;
@@ -154,6 +171,12 @@ export interface DesktopApi {
     download(): Promise<AppUpdateState>;
     install(): Promise<AppUpdateState>;
     onState(listener: (state: AppUpdateState) => void): () => void;
+  };
+  mcp: {
+    getState(): Promise<McpIntegrationState>;
+    registerCodex(): Promise<McpIntegrationState>;
+    removeCodex(): Promise<McpIntegrationState>;
+    copyManualConfig(): Promise<McpIntegrationState>;
   };
   dialog: {
     pickPdfs(): Promise<string[]>;

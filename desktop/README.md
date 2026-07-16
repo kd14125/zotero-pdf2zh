@@ -14,6 +14,16 @@ npm run dev
 
 `node-pty` 已包含 Windows x64 ConPTY 预编译模块，项目关闭了 electron-builder 的原生重建。
 
+## MCP 架构
+
+安装包同时包含桌面界面、隐藏翻译引擎和 `stdio` MCP 服务。桌面端与 MCP 通过当前 Windows
+用户专属的命名管道连接同一个引擎，由引擎独占配置、历史、运行时和任务队列。关闭桌面窗口不会
+终止 MCP 发起的任务。
+
+设置页可显式调用 `codex mcp add` 接入 `pdf2zh-desktop`，并提供重新检测、取消接入和复制手动
+配置。安装程序不会静默修改 Codex 配置。MCP 不开放 HTTP 端口，也不提供 API Key 读取、修改
+或删除结果文件的工具。
+
 ## 验证和打包
 
 ```powershell
@@ -22,6 +32,9 @@ npm run build
 npm run test:ui
 npm run package
 ```
+
+MCP 构建会将稳定版 `@modelcontextprotocol/sdk`、Zod 校验和纯 Node 引擎客户端打包为
+`build/mcp/server.cjs`，并附带独立的 `pdf2zh-mcp.exe`，用户不需要另外安装 Node.js。
 
 安装包生成在 `desktop/release/`。安装包不包含约 630 MB 的翻译运行时；首次启动由运行时页面
 下载固定版本、校验 SHA-256 后解压到用户数据目录。后续桌面应用更新会扫描并复用已有运行时，
