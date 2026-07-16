@@ -18,7 +18,7 @@ export function registerIpc(options: {
 
   ipcMain.handle(channels.appVersion, () => app.getVersion());
   ipcMain.handle(channels.appOpenSource, async () => {
-    await shell.openExternal("https://github.com/kd14125/zotero-pdf2zh");
+    await shell.openExternal("https://github.com/kd14125/pdf2zh-desktop");
   });
   ipcMain.handle(channels.appOpenLicense, () =>
     shell.openPath(

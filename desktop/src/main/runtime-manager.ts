@@ -18,7 +18,7 @@ import type { AppSettings, RuntimeManifest, RuntimeState } from "../shared/types
 import { findReusableRuntime, resolveRuntimeRoots, sha256File } from "./file-utils";
 
 const REMOTE_MANIFEST_URL =
-  "https://raw.githubusercontent.com/kd14125/zotero-pdf2zh/main/desktop/runtime-manifest.json";
+  "https://raw.githubusercontent.com/kd14125/pdf2zh-desktop/main/desktop/runtime-manifest.json";
 
 export class RuntimeManager extends EventEmitter {
   private manifest!: RuntimeManifest;

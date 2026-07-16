@@ -6,17 +6,17 @@
 
 无需 Zotero 和 Python 的 Windows PDF 翻译桌面客户端
 
-[![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?style=flat-square&logo=windows)](https://github.com/kd14125/zotero-pdf2zh/releases)
-[![Desktop release](https://img.shields.io/badge/Desktop-v0.3.0-2E7D32?style=flat-square)](https://github.com/kd14125/zotero-pdf2zh/releases/tag/desktop-v0.3.0)
+[![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?style=flat-square&logo=windows)](https://github.com/kd14125/pdf2zh-desktop/releases)
+[![Desktop release](https://img.shields.io/badge/Desktop-v0.3.0-2E7D32?style=flat-square)](https://github.com/kd14125/pdf2zh-desktop/releases/tag/desktop-v0.3.0)
 [![License](https://img.shields.io/badge/License-AGPL--3.0--or--later-555?style=flat-square)](./LICENSE)
 [![Upstream](https://img.shields.io/badge/Forked%20from-guaguastandup%2Fzotero--pdf2zh-24292F?style=flat-square&logo=github)](https://github.com/guaguastandup/zotero-pdf2zh)
 
-[![直接下载 Windows 安装包](https://img.shields.io/badge/直接下载-Windows%20安装包-2E7D32?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kd14125/zotero-pdf2zh/releases/download/desktop-v0.3.0/PDF2ZH-Desktop-Setup-0.3.0.exe)
+[![直接下载 Windows 安装包](https://img.shields.io/badge/直接下载-Windows%20安装包-2E7D32?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kd14125/pdf2zh-desktop/releases/download/desktop-v0.3.0/PDF2ZH-Desktop-Setup-0.3.0.exe)
 
 **普通用户只需下载并运行 `.exe`，不需要下载 `.sha256` 文件。**
 
-[查看版本说明](https://github.com/kd14125/zotero-pdf2zh/releases/tag/desktop-v0.3.0)
-· [SHA-256 校验文件（高级用户可选）](https://github.com/kd14125/zotero-pdf2zh/releases/download/desktop-v0.3.0/PDF2ZH-Desktop-Setup-0.3.0.exe.sha256)
+[查看版本说明](https://github.com/kd14125/pdf2zh-desktop/releases/tag/desktop-v0.3.0)
+· [SHA-256 校验文件（高级用户可选）](https://github.com/kd14125/pdf2zh-desktop/releases/download/desktop-v0.3.0/PDF2ZH-Desktop-Setup-0.3.0.exe.sha256)
 
 </div>
 
@@ -42,7 +42,7 @@ PDF 进行单语或双语翻译，不需要安装 Zotero、Python、uv 或 conda
 > [!IMPORTANT]
 > 本仓库是 [guaguastandup/zotero-pdf2zh](https://github.com/guaguastandup/zotero-pdf2zh)
 > 的 fork，PDF2ZH Desktop 是在其基础上开发的独立衍生版本，不是上游作者发布或维护的官方
-> 桌面客户端。桌面版问题请提交到[本仓库 Issues](https://github.com/kd14125/zotero-pdf2zh/issues)，
+> 桌面客户端。桌面版问题请提交到[本仓库 Issues](https://github.com/kd14125/pdf2zh-desktop/issues)，
 > 不要占用上游项目的支持渠道。
 
 ## 主要功能
@@ -68,7 +68,7 @@ PDF 进行单语或双语翻译，不需要安装 Zotero、Python、uv 或 conda
 
 系统要求为 Windows 10/11 x64。点击下方链接下载并运行安装包：
 
-**[直接下载 PDF2ZH Desktop 安装包（`.exe`）](https://github.com/kd14125/zotero-pdf2zh/releases/download/desktop-v0.3.0/PDF2ZH-Desktop-Setup-0.3.0.exe)**
+**[直接下载 PDF2ZH Desktop 安装包（`.exe`）](https://github.com/kd14125/pdf2zh-desktop/releases/download/desktop-v0.3.0/PDF2ZH-Desktop-Setup-0.3.0.exe)**
 
 普通用户不需要下载或处理 SHA-256 文件。安装完成后直接启动 PDF2ZH Desktop，软件会通过
 图形界面完成后续运行时下载和校验。

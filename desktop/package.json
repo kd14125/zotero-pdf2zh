@@ -4,7 +4,7 @@
   "description": "PDF2ZH Windows desktop client",
   "license": "AGPL-3.0-or-later",
   "author": "kd14125",
-  "homepage": "https://github.com/kd14125/zotero-pdf2zh",
+  "homepage": "https://github.com/kd14125/pdf2zh-desktop",
   "main": "./out/main/index.js",
   "type": "module",
   "scripts": {
@@ -83,7 +83,7 @@
       {
         "provider": "github",
         "owner": "kd14125",
-        "repo": "zotero-pdf2zh",
+        "repo": "pdf2zh-desktop",
         "releaseType": "release"
       }
     ],
