@@ -170,6 +170,11 @@ npm run package
 
 安装包生成在 `desktop/release/`。更完整的开发说明见 [`desktop/README.md`](./desktop/README.md)。
 
+## 开发与贡献
+
+- [@kd14125](https://github.com/kd14125)：项目维护者，负责桌面端设计、功能规划、测试与发布
+- [@codex](https://github.com/codex)：OpenAI Codex，协助桌面端代码实现、自动化测试与文档维护
+
 ## Fork 来源与引用说明
 
 本仓库在上游
