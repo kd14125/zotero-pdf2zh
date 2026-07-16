@@ -1077,13 +1077,29 @@ function SettingsView({
             <label className="field">
               <span>模型</span>
               <div className="model-picker">
-                <input
-                  list={`model-options-${draft.id}`}
-                  value={draft.model}
-                  disabled={draft.provider === "siliconflowfree"}
-                  placeholder="输入模型名称或获取模型列表"
-                  onChange={(e) => setDraft({ ...draft, model: e.target.value })}
-                />
+                <div className="model-inputs">
+                  {modelOptions.length > 0 && (
+                    <select
+                      aria-label="可用模型列表"
+                      value={modelOptions.includes(draft.model) ? draft.model : ""}
+                      onChange={(event) => setDraft({ ...draft, model: event.target.value })}
+                    >
+                      <option value="">选择已获取的模型（{modelOptions.length}）</option>
+                      {modelOptions.map((model) => (
+                        <option key={model} value={model}>
+                          {model}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  <input
+                    aria-label="模型"
+                    value={draft.model}
+                    disabled={draft.provider === "siliconflowfree"}
+                    placeholder="输入模型名称或获取模型列表"
+                    onChange={(e) => setDraft({ ...draft, model: e.target.value })}
+                  />
+                </div>
                 <button
                   type="button"
                   className="secondary-button"
@@ -1098,11 +1114,6 @@ function SettingsView({
                   获取模型
                 </button>
               </div>
-              <datalist id={`model-options-${draft.id}`}>
-                {modelOptions.map((model) => (
-                  <option key={model} value={model} />
-                ))}
-              </datalist>
             </label>
             <label className="field">
               <span>API Key</span>
