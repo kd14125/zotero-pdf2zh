@@ -13,7 +13,12 @@ import type {
   TranslationOptions,
 } from "../shared/types";
 import { parseProgress, redactLog } from "./progress";
-import { ProviderRepository } from "./providers";
+import {
+  ProviderRepository,
+  startAnthropicMessagesBridge,
+  startOpenAICompatibleBridge,
+  type ProviderProtocolBridge,
+} from "./providers";
 import { RuntimeManager } from "./runtime-manager";
 import { JsonStore } from "./store";
 
@@ -144,6 +149,7 @@ export class TaskManager extends EventEmitter {
     const temporaryRoot = join(app.getPath("temp"), "pdf2zh-desktop", task.id);
     const stagingOutput = join(temporaryRoot, "output");
     const configPath = join(temporaryRoot, "task-config.toml");
+    let providerBridge: ProviderProtocolBridge | undefined;
     task.status = "running";
     task.startedAt = new Date().toISOString();
     task.progress = { percent: 0, stage: "准备运行时", message: "检查运行环境" };
@@ -153,7 +159,23 @@ export class TaskManager extends EventEmitter {
       await this.runtime.ensureInstalled();
       const binary = this.runtime.getBinaryPath();
       await mkdir(stagingOutput, { recursive: true });
-      const config = buildProviderConfig(profile);
+      let runtimeProfile = profile;
+      if (profile.provider === "anthropic" || profile.provider === "openaicompatible") {
+        const startBridge =
+          profile.provider === "anthropic"
+            ? startAnthropicMessagesBridge
+            : startOpenAICompatibleBridge;
+        providerBridge = await startBridge({
+          baseUrl: profile.baseUrl,
+          apiKey: profile.apiKey,
+        });
+        runtimeProfile = {
+          ...profile,
+          baseUrl: providerBridge.baseUrl,
+          apiKey: providerBridge.apiKey,
+        };
+      }
+      const config = buildProviderConfig(runtimeProfile);
       await writeFile(configPath, stringify(config), { encoding: "utf8", mode: 0o600 });
       const args = buildCliArgs(
         task.inputPath,
@@ -201,6 +223,7 @@ export class TaskManager extends EventEmitter {
       }
     } finally {
       task.finishedAt = new Date().toISOString();
+      await providerBridge?.close().catch(() => undefined);
       await rm(temporaryRoot, { recursive: true, force: true });
       await this.persistAndEmit();
     }
@@ -270,9 +293,10 @@ export function buildCliArgs(
   provider: ProviderProfile["provider"],
   options: TranslationOptions,
 ): string[] {
+  const runtimeProvider = provider === "anthropic" ? "openaicompatible" : provider;
   const args = [
     inputPath,
-    `--${provider}`,
+    `--${runtimeProvider}`,
     "--qps",
     String(options.qps),
     "--output",
@@ -349,8 +373,19 @@ export function buildProviderConfig(
         openai_compatible_api_key: profile.apiKey,
       };
       break;
+    case "anthropic":
+      section = {
+        ...common,
+        translate_engine_type: "OpenAICompatible",
+        openai_compatible_model: profile.model,
+        openai_compatible_base_url: profile.baseUrl,
+        openai_compatible_api_key: profile.apiKey,
+      };
+      break;
   }
-  return { [`${profile.provider}_detail`]: { ...section, ...profile.extra } };
+  const sectionName =
+    profile.provider === "anthropic" ? "openaicompatible_detail" : `${profile.provider}_detail`;
+  return { [sectionName]: { ...section, ...profile.extra } };
 }
 
 export function extractRuntimeFailure(logs: string[]): string | undefined {
@@ -374,6 +409,7 @@ function providerDisplayName(provider: ProviderProfile["provider"]): string {
     siliconflow: "SiliconFlow",
     zhipu: "Zhipu",
     openaicompatible: "OpenAICompatible",
+    anthropic: "OpenAICompatible",
   };
   return names[provider];
 }

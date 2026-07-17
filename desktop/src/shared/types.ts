@@ -6,6 +6,7 @@ export const PROVIDER_IDS = [
   "siliconflow",
   "zhipu",
   "openaicompatible",
+  "anthropic",
 ] as const;
 
 export type ProviderId = (typeof PROVIDER_IDS)[number];

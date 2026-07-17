@@ -93,6 +93,12 @@ const providerDefinitions: Record<
     defaultModel: "",
     keyRequired: true,
   },
+  anthropic: {
+    label: "Anthropic Messages",
+    defaultUrl: "https://api.anthropic.com",
+    defaultModel: "",
+    keyRequired: true,
+  },
 };
 
 const defaultOptions: TranslationOptions = {
@@ -1176,6 +1182,7 @@ function SettingsView({
             </div>
           </div>
           <div className="form-actions">
+            <span className="test-cost-note">测试连接会发送最小请求，可能产生少量费用</span>
             <button className="secondary-button" disabled={testing} onClick={() => void test()}>
               {testing ? <LoaderCircle className="spin" size={16} /> : <Activity size={16} />}
               测试连接

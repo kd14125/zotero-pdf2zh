@@ -7,16 +7,16 @@
 无需 Zotero 和 Python 的 Windows PDF 翻译桌面客户端
 
 [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?style=flat-square&logo=windows)](https://github.com/kd14125/pdf2zh-desktop/releases)
-[![Desktop release](https://img.shields.io/badge/Desktop-v0.3.0-2E7D32?style=flat-square)](https://github.com/kd14125/pdf2zh-desktop/releases/tag/desktop-v0.3.0)
+[![Desktop release](https://img.shields.io/badge/Desktop-v0.3.1-2E7D32?style=flat-square)](https://github.com/kd14125/pdf2zh-desktop/releases/tag/desktop-v0.3.1)
 [![License](https://img.shields.io/badge/License-AGPL--3.0--or--later-555?style=flat-square)](./LICENSE)
 [![Upstream](https://img.shields.io/badge/Forked%20from-guaguastandup%2Fzotero--pdf2zh-24292F?style=flat-square&logo=github)](https://github.com/guaguastandup/zotero-pdf2zh)
 
-[![直接下载 Windows 安装包](https://img.shields.io/badge/直接下载-Windows%20安装包-2E7D32?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kd14125/pdf2zh-desktop/releases/download/desktop-v0.3.0/PDF2ZH-Desktop-Setup-0.3.0.exe)
+[![直接下载 Windows 安装包](https://img.shields.io/badge/直接下载-Windows%20安装包-2E7D32?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kd14125/pdf2zh-desktop/releases/download/desktop-v0.3.1/PDF2ZH-Desktop-Setup-0.3.1.exe)
 
 **普通用户只需下载并运行 `.exe`，不需要下载 `.sha256` 文件。**
 
-[查看版本说明](https://github.com/kd14125/pdf2zh-desktop/releases/tag/desktop-v0.3.0)
-· [SHA-256 校验文件（高级用户可选）](https://github.com/kd14125/pdf2zh-desktop/releases/download/desktop-v0.3.0/PDF2ZH-Desktop-Setup-0.3.0.exe.sha256)
+[查看版本说明](https://github.com/kd14125/pdf2zh-desktop/releases/tag/desktop-v0.3.1)
+· [SHA-256 校验文件（高级用户可选）](https://github.com/kd14125/pdf2zh-desktop/releases/download/desktop-v0.3.1/PDF2ZH-Desktop-Setup-0.3.1.exe.sha256)
 
 </div>
 
@@ -52,13 +52,16 @@ PDF 进行单语或双语翻译，不需要安装 Zotero、Python、uv 或 conda
 - 支持水印、OCR 兼容、术语表、QPS、Pool Size 和自定义输出目录
 - 展示翻译阶段、百分比、耗时和日志摘要，支持取消、失败重试和移出队列
 - 保存本地历史记录，支持 PDF 预览、打开文件、定位目录和按原配置重试
-- 支持 SiliconFlowFree、OpenAI、AliyunDashScope、DeepSeek、SiliconFlow、Zhipu 和
-  OpenAICompatible
+- 支持 SiliconFlowFree、OpenAI、AliyunDashScope、DeepSeek、SiliconFlow、Zhipu、
+  OpenAICompatible 和 Anthropic Messages
 - 同一服务可保存多组独立 API 配置，点击左侧配置即可切换当前翻译服务
 - 使用当前配置获取完整模型列表并通过独立下拉框选择，同时保留手动输入模型名称
 - 在设置页手动检查、下载并重启安装 GitHub Release 新版本
 - 首次启动自动下载固定版本运行时，后续应用更新直接复用，无需重复下载
 - API Key 通过 Electron `safeStorage` 和 Windows DPAPI 加密保存
+- Anthropic Messages 通过仅监听本机回环地址的短生命周期适配器接入，不对外开放端口
+- OpenAICompatible 根地址会自动补全 `/v1`；任务通过本机适配器移除中转站可能拦截的
+  OpenAI Python SDK 请求头
 - SiliconFlowFree 自动启用富文本兼容模式，避免内部样式标签进入翻译正文
 - 可在设置页一键接入 Codex MCP，无需打开桌面窗口即可提交任务、查询进度和获取结果
 
@@ -68,7 +71,7 @@ PDF 进行单语或双语翻译，不需要安装 Zotero、Python、uv 或 conda
 
 系统要求为 Windows 10/11 x64。点击下方链接下载并运行安装包：
 
-**[直接下载 PDF2ZH Desktop 安装包（`.exe`）](https://github.com/kd14125/pdf2zh-desktop/releases/download/desktop-v0.3.0/PDF2ZH-Desktop-Setup-0.3.0.exe)**
+**[直接下载 PDF2ZH Desktop 安装包（`.exe`）](https://github.com/kd14125/pdf2zh-desktop/releases/download/desktop-v0.3.1/PDF2ZH-Desktop-Setup-0.3.1.exe)**
 
 普通用户不需要下载或处理 SHA-256 文件。安装完成后直接启动 PDF2ZH Desktop，软件会通过
 图形界面完成后续运行时下载和校验。
