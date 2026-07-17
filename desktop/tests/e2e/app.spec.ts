@@ -43,11 +43,17 @@ test("desktop shell renders all primary work views", async () => {
     await expect(page.getByRole("heading", { name: "设置" })).toBeVisible();
     await expect(page.getByText("API Key 已使用 Windows DPAPI 加密保存在本机。")).toBeVisible();
     await expect(page.getByText("Codex MCP", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("服务类型").locator('option[value="anthropic"]')).toHaveText(
+      "Anthropic Messages",
+    );
+    await expect(page.getByText("测试连接会发送最小请求，可能产生少量费用")).toBeVisible();
     await expect(page.getByRole("button", { name: "仅安装版支持" })).toBeDisabled();
 
     const profileItems = page.locator(".profile-list > button");
     await expect(profileItems).toHaveCount(1);
     await page.getByRole("button", { name: "新增配置" }).click();
+    await page.getByLabel("服务类型").selectOption("anthropic");
+    await expect(page.getByLabel("API Base URL")).toHaveValue("https://api.anthropic.com");
     await page.getByLabel("服务类型").selectOption("deepseek");
     await page.getByLabel("配置名称").fill("DeepSeek A");
     await page.getByLabel("API Base URL").fill(`http://127.0.0.1:${modelServerAddress.port}/v1`);

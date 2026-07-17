@@ -855,9 +855,15 @@ h2 {
 }
 .form-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
   margin-top: 18px;
+}
+.test-cost-note {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 10px;
 }
 .mcp-band {
   display: grid;
