@@ -31,6 +31,7 @@ export const translationOptionsSchema = z
     translateFirst: z.boolean(),
     qps: z.number().int().min(1).max(10000),
     poolSize: z.number().int().min(0).max(10000),
+    mineruFormulaEnhancement: z.boolean(),
     outputDirectory: z.string().max(1000).optional(),
   })
   .refine((value) => value.outputMono || value.outputDual, {
@@ -41,6 +42,15 @@ export const enqueueRequestSchema = z.object({
   inputPaths: z.array(z.string().min(1)).min(1).max(200),
   profileId: z.string().min(1),
   options: translationOptionsSchema,
+  formulaEnhancement: z.boolean().optional(),
+  sourceTaskId: z.string().min(1).max(100).optional(),
+});
+
+export const mineruConfigSchema = z.object({
+  baseUrl: z.string().trim().url().max(500),
+  modelVersion: z.enum(["vlm", "pipeline"]),
+  hasApiKey: z.boolean(),
+  apiKey: z.string().max(2000).optional(),
 });
 
 export const appSettingsSchema = z.object({

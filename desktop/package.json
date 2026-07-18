@@ -1,6 +1,6 @@
 {
   "name": "pdf2zh-desktop",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "PDF2ZH Windows desktop client",
   "license": "AGPL-3.0-or-later",
   "author": "kd14125",
@@ -74,6 +74,10 @@
       {
         "from": "build/mcp",
         "to": "mcp"
+      },
+      {
+        "from": "resources/formula-hints-runner.py",
+        "to": "formula-hints-runner.py"
       }
     ],
     "asarUnpack": [

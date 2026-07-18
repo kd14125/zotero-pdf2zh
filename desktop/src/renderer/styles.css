@@ -436,6 +436,33 @@ h2 {
   grid-template-columns: 1fr 1fr;
   gap: 10px 12px;
 }
+.check-with-help {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.mineru-option-row {
+  grid-column: 1 / -1;
+}
+.inline-help-button {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: #6d7782;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+}
+.inline-help-button:hover,
+.inline-help-button:focus-visible {
+  color: var(--blue);
+  background: #eaf2ff;
+  outline: none;
+}
 .check-control {
   display: flex;
   align-items: center;
@@ -684,7 +711,9 @@ h2 {
 }
 .history-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 3px;
 }
 .output-list {
@@ -864,6 +893,50 @@ h2 {
   margin-right: auto;
   color: var(--muted);
   font-size: 10px;
+}
+.mineru-band {
+  margin-top: 18px;
+  padding: 16px;
+  background: #f5f7f8;
+  border: 1px solid #dce2e7;
+  border-radius: 7px;
+}
+.mineru-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mineru-heading strong,
+.mineru-heading span {
+  display: block;
+}
+.mineru-heading strong {
+  font-size: 13px;
+}
+.mineru-heading span,
+.mineru-actions > span {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.mineru-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(140px, 0.6fr) minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+.mineru-fields .field {
+  margin: 0;
+}
+.mineru-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+.mineru-actions > span {
+  margin-right: auto;
 }
 .mcp-band {
   display: grid;
@@ -1075,6 +1148,59 @@ h2 {
   height: 100%;
   border: 0;
 }
+.help-modal {
+  display: grid;
+  grid-template-rows: 48px minmax(0, 1fr) auto;
+  width: min(590px, 94vw);
+  max-height: min(720px, 90vh);
+  overflow: hidden;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 20px 70px #0008;
+}
+.help-modal-body {
+  display: grid;
+  gap: 18px;
+  overflow-y: auto;
+  padding: 20px 22px;
+  color: #3e4852;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.help-modal-body p,
+.help-modal-body ul,
+.help-modal-body ol {
+  margin: 0;
+}
+.help-modal-body h3 {
+  margin: 0 0 7px;
+  color: var(--text);
+  font-size: 14px;
+}
+.help-modal-body ul,
+.help-modal-body ol {
+  padding-left: 21px;
+}
+.help-intro strong {
+  color: var(--text);
+}
+.help-notice {
+  padding: 11px 13px;
+  color: #6b4d16;
+  background: #fff8e6;
+  border-left: 3px solid var(--amber);
+  border-radius: 4px;
+}
+.help-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 13px 18px;
+  border-top: 1px solid var(--line);
+}
+.help-link {
+  text-decoration: none;
+}
 
 @media (max-width: 1180px) {
   .app-shell {
@@ -1089,6 +1215,12 @@ h2 {
   }
   .toggle-list {
     grid-template-columns: 1fr;
+  }
+  .mineru-fields {
+    grid-template-columns: 1fr 1fr;
+  }
+  .mineru-fields .field:first-child {
+    grid-column: 1 / -1;
   }
   .notice {
     left: calc(50% + 95px);

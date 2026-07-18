@@ -1,12 +1,13 @@
 import { app } from "electron";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { AppSettings, ProviderProfile, TaskRecord } from "../shared/types";
+import type { AppSettings, MineruConfig, ProviderProfile, TaskRecord } from "../shared/types";
 
 interface PersistedData {
   settings: AppSettings;
   providers: ProviderProfile[];
   tasks: TaskRecord[];
+  mineru: Omit<MineruConfig, "hasApiKey" | "apiKey">;
 }
 
 export const defaultOptions = {
@@ -23,6 +24,7 @@ export const defaultOptions = {
   translateFirst: true,
   qps: 10,
   poolSize: 0,
+  mineruFormulaEnhancement: false,
 };
 
 const initialData: PersistedData = {
@@ -32,6 +34,10 @@ const initialData: PersistedData = {
   },
   providers: [],
   tasks: [],
+  mineru: {
+    baseUrl: "https://mineru.net/api/v4",
+    modelVersion: "vlm",
+  },
 };
 
 export class JsonStore {
@@ -57,6 +63,10 @@ export class JsonStore {
         },
         providers: Array.isArray(parsed.providers) ? parsed.providers : [],
         tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+        mineru: {
+          ...initialData.mineru,
+          ...parsed.mineru,
+        },
       };
       for (const task of this.data.tasks) {
         if (task.status === "running" || task.status === "queued") {
@@ -97,6 +107,15 @@ export class JsonStore {
 
   async setTasks(tasks: TaskRecord[]): Promise<void> {
     this.data.tasks = structuredClone(tasks).slice(0, 500);
+    await this.flush();
+  }
+
+  getMineruConfig(): Omit<MineruConfig, "hasApiKey" | "apiKey"> {
+    return structuredClone(this.data.mineru);
+  }
+
+  async setMineruConfig(config: Omit<MineruConfig, "hasApiKey" | "apiKey">): Promise<void> {
+    this.data.mineru = structuredClone(config);
     await this.flush();
   }
 

@@ -68,6 +68,7 @@ async function bootstrapEngine(): Promise<void> {
 }
 
 function createWindow(): void {
+  const hideWindowForE2e = process.env.PDF2ZH_E2E_HIDE_WINDOW === "1";
   mainWindow = new BrowserWindow({
     width: 1440,
     height: 900,
@@ -85,7 +86,7 @@ function createWindow(): void {
       webSecurity: true,
     },
   });
-  mainWindow.once("ready-to-show", () => mainWindow?.show());
+  if (!hideWindowForE2e) mainWindow.once("ready-to-show", () => mainWindow?.show());
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("https://")) {
       void import("electron").then(({ shell }) => shell.openExternal(url));

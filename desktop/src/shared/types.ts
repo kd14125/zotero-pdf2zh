@@ -38,7 +38,21 @@ export interface TranslationOptions {
   translateFirst: boolean;
   qps: number;
   poolSize: number;
+  mineruFormulaEnhancement: boolean;
   outputDirectory?: string;
+}
+
+export interface MineruConfig {
+  baseUrl: string;
+  modelVersion: "vlm" | "pipeline";
+  hasApiKey: boolean;
+  apiKey?: string;
+}
+
+export interface MineruTestResult {
+  ok: boolean;
+  message: string;
+  latencyMs?: number;
 }
 
 export type TaskStatus = "queued" | "running" | "completed" | "failed" | "cancelled";
@@ -60,6 +74,8 @@ export interface TaskRecord {
   progress: TaskProgress;
   outputFiles: string[];
   logs: string[];
+  formulaEnhancement?: boolean;
+  sourceTaskId?: string;
   error?: string;
   createdAt: string;
   startedAt?: string;
@@ -151,6 +167,8 @@ export interface EnqueueRequest {
   inputPaths: string[];
   profileId: string;
   options: TranslationOptions;
+  formulaEnhancement?: boolean;
+  sourceTaskId?: string;
 }
 
 export interface PreviewResult {
@@ -190,6 +208,11 @@ export interface DesktopApi {
     test(profile: ProviderProfile): Promise<ProviderTestResult>;
     listModels(profile: ProviderProfile): Promise<ProviderModelsResult>;
   };
+  mineru: {
+    getConfig(): Promise<MineruConfig>;
+    saveConfig(config: MineruConfig): Promise<MineruConfig>;
+    test(config: MineruConfig): Promise<MineruTestResult>;
+  };
   runtime: {
     getState(): Promise<RuntimeState>;
     ensure(): Promise<RuntimeState>;
@@ -203,6 +226,7 @@ export interface DesktopApi {
     enqueue(request: EnqueueRequest): Promise<TaskRecord[]>;
     cancel(id: string): Promise<void>;
     retry(id: string): Promise<TaskRecord>;
+    optimizeFormulas(id: string): Promise<TaskRecord>;
     remove(id: string): Promise<void>;
     clearHistory(): Promise<void>;
     onChanged(listener: (tasks: TaskRecord[]) => void): () => void;

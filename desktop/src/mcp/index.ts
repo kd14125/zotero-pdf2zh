@@ -129,7 +129,11 @@ server.registerTool(
       if (!selectedId) throw new Error("尚未选择翻译配置，请先在桌面端设置当前配置");
       const profile = profiles.find((candidate) => candidate.id === selectedId);
       if (!profile) throw new Error("指定的翻译配置不存在");
-      const merged = { ...settings.lastOptions, ...options } as TranslationOptions;
+      const merged = {
+        ...settings.lastOptions,
+        ...options,
+        mineruFormulaEnhancement: false,
+      } as TranslationOptions;
       if (!merged.outputMono && !merged.outputDual) throw new Error("至少选择一种输出文件");
       const tasks = await client.request<TaskRecord[]>("tasks.enqueue", {
         inputPaths,

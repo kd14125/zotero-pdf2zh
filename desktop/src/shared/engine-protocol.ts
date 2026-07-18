@@ -12,6 +12,9 @@ export const ENGINE_METHODS = [
   "providers.remove",
   "providers.test",
   "providers.models",
+  "mineru.get",
+  "mineru.save",
+  "mineru.test",
   "runtime.state",
   "runtime.ensure",
   "runtime.check-update",
@@ -21,6 +24,7 @@ export const ENGINE_METHODS = [
   "tasks.enqueue",
   "tasks.cancel",
   "tasks.retry",
+  "tasks.optimize-formulas",
   "tasks.remove",
   "tasks.clear-history",
 ] as const;

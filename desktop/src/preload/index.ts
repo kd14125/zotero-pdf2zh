@@ -34,6 +34,11 @@ const api: DesktopApi = {
     test: (profile) => ipcRenderer.invoke(channels.providersTest, profile),
     listModels: (profile) => ipcRenderer.invoke(channels.providersModels, profile),
   },
+  mineru: {
+    getConfig: () => ipcRenderer.invoke(channels.mineruGet),
+    saveConfig: (config) => ipcRenderer.invoke(channels.mineruSave, config),
+    test: (config) => ipcRenderer.invoke(channels.mineruTest, config),
+  },
   runtime: {
     getState: () => ipcRenderer.invoke(channels.runtimeState),
     ensure: () => ipcRenderer.invoke(channels.runtimeEnsure),
@@ -47,6 +52,7 @@ const api: DesktopApi = {
     enqueue: (request) => ipcRenderer.invoke(channels.tasksEnqueue, request),
     cancel: (id) => ipcRenderer.invoke(channels.tasksCancel, id),
     retry: (id) => ipcRenderer.invoke(channels.tasksRetry, id),
+    optimizeFormulas: (id) => ipcRenderer.invoke(channels.tasksOptimizeFormulas, id),
     remove: (id) => ipcRenderer.invoke(channels.tasksRemove, id),
     clearHistory: () => ipcRenderer.invoke(channels.tasksClearHistory),
     onChanged: (listener) => subscribe<TaskRecord[]>(channels.tasksChanged, listener),

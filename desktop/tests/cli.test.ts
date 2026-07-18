@@ -27,6 +27,7 @@ const options: TranslationOptions = {
   translateFirst: true,
   qps: 8,
   poolSize: 12,
+  mineruFormulaEnhancement: false,
 };
 
 describe("CLI mapping", () => {
@@ -175,6 +176,7 @@ describe("CLI mapping", () => {
         outputDual: false,
         qps: 1,
         poolSize: 0,
+        mineruFormulaEnhancement: false,
       });
       args.push("--pages", "1");
       let result: { exitCode: number; output: string };

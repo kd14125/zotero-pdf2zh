@@ -77,6 +77,9 @@ export function registerIpc(options: {
   ipcMain.handle(channels.providersModels, (_event, input) =>
     engine.request("providers.models", input),
   );
+  ipcMain.handle(channels.mineruGet, () => engine.request("mineru.get"));
+  ipcMain.handle(channels.mineruSave, (_event, input) => engine.request("mineru.save", input));
+  ipcMain.handle(channels.mineruTest, (_event, input) => engine.request("mineru.test", input));
 
   ipcMain.handle(channels.runtimeState, () => engine.request("runtime.state"));
   ipcMain.handle(channels.runtimeEnsure, () => engine.request("runtime.ensure"));
@@ -88,6 +91,9 @@ export function registerIpc(options: {
   ipcMain.handle(channels.tasksEnqueue, (_event, input) => engine.request("tasks.enqueue", input));
   ipcMain.handle(channels.tasksCancel, (_event, input) => engine.request("tasks.cancel", input));
   ipcMain.handle(channels.tasksRetry, (_event, input) => engine.request("tasks.retry", input));
+  ipcMain.handle(channels.tasksOptimizeFormulas, (_event, input) =>
+    engine.request("tasks.optimize-formulas", input),
+  );
   ipcMain.handle(channels.tasksRemove, (_event, input) => engine.request("tasks.remove", input));
   ipcMain.handle(channels.tasksClearHistory, () => engine.request("tasks.clear-history"));
 

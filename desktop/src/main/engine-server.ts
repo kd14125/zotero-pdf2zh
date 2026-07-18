@@ -12,6 +12,7 @@ import {
   appSettingsSchema,
   enqueueRequestSchema,
   idSchema,
+  mineruConfigSchema,
   providerProfileSchema,
 } from "../shared/schemas";
 import type { EngineStatus, TaskRecord } from "../shared/types";
@@ -21,6 +22,7 @@ import { ProviderRepository } from "./providers";
 import { RuntimeManager } from "./runtime-manager";
 import { JsonStore } from "./store";
 import { TaskManager } from "./task-manager";
+import { MineruManager } from "./mineru";
 
 const DEFAULT_IDLE_TIMEOUT_MS = 5 * 60 * 1000;
 
@@ -32,6 +34,7 @@ export class EngineServer {
   private store!: JsonStore;
   private providers!: ProviderRepository;
   private runtime!: RuntimeManager;
+  private mineru!: MineruManager;
   private tasks!: TaskManager;
 
   async start(): Promise<void> {
@@ -42,9 +45,10 @@ export class EngineServer {
     await Promise.all([this.store.load(), credentials.load()]);
     this.providers = new ProviderRepository(this.store, credentials);
     this.runtime = new RuntimeManager(() => this.store.getSettings());
+    this.mineru = new MineruManager(this.store, credentials);
     await this.runtime.initialize();
     await rm(join(app.getPath("temp"), "pdf2zh-desktop"), { recursive: true, force: true });
-    this.tasks = new TaskManager(this.store, this.providers, this.runtime);
+    this.tasks = new TaskManager(this.store, this.providers, this.runtime, this.mineru);
     this.runtime.on("changed", (state) => this.broadcast("runtime.changed", state));
     this.tasks.on("changed", (records) => {
       this.broadcast("tasks.changed", records);
@@ -132,6 +136,12 @@ export class EngineServer {
         return this.providers.test(providerProfileSchema.parse(request.params));
       case "providers.models":
         return this.providers.listModels(providerProfileSchema.parse(request.params));
+      case "mineru.get":
+        return this.mineru.getConfig();
+      case "mineru.save":
+        return this.mineru.saveConfig(mineruConfigSchema.parse(request.params));
+      case "mineru.test":
+        return this.mineru.test(mineruConfigSchema.parse(request.params));
       case "runtime.state":
         return this.runtime.getState();
       case "runtime.ensure":
@@ -150,6 +160,8 @@ export class EngineServer {
         return this.tasks.cancel(idSchema.parse(request.params));
       case "tasks.retry":
         return this.tasks.retry(idSchema.parse(request.params));
+      case "tasks.optimize-formulas":
+        return this.tasks.optimizeFormulas(idSchema.parse(request.params));
       case "tasks.remove":
         return this.tasks.remove(idSchema.parse(request.params));
       case "tasks.clear-history":

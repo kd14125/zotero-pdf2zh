@@ -23,7 +23,11 @@ test("desktop shell renders all primary work views", async () => {
   const userData = await mkdtemp(join(tmpdir(), "pdf2zh-e2e-"));
   const application = await electron.launch({
     args: [resolve("."), `--user-data-dir=${userData}`, "--force-device-scale-factor=1.25"],
-    env: { ...process.env, PDF2ZH_ENGINE_IDLE_TIMEOUT_MS: "1000" },
+    env: {
+      ...process.env,
+      PDF2ZH_ENGINE_IDLE_TIMEOUT_MS: "1000",
+      PDF2ZH_E2E_HIDE_WINDOW: "1",
+    },
   });
   try {
     const page = await application.firstWindow();
@@ -43,6 +47,11 @@ test("desktop shell renders all primary work views", async () => {
     await expect(page.getByRole("heading", { name: "设置" })).toBeVisible();
     await expect(page.getByText("API Key 已使用 Windows DPAPI 加密保存在本机。")).toBeVisible();
     await expect(page.getByText("Codex MCP", { exact: true })).toBeVisible();
+    await expect(page.getByText("MinerU 公式漏检增强", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("API 地址", { exact: true })).toHaveValue(
+      "https://mineru.net/api/v4",
+    );
+    await expect(page.getByRole("button", { name: "保存 MinerU" })).toBeVisible();
     await expect(page.getByLabel("服务类型").locator('option[value="anthropic"]')).toHaveText(
       "Anthropic Messages",
     );
@@ -79,13 +88,26 @@ test("desktop shell renders all primary work views", async () => {
 
     await profileItems.filter({ hasText: "DeepSeek A" }).click();
     await page.screenshot({ path: "test-results/settings-multi-profile.png", fullPage: true });
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.screenshot({ path: "test-results/settings-mineru-1280x720.png", fullPage: true });
     await page.getByRole("button", { name: "翻译", exact: true }).click();
     await expect(page.getByLabel("翻译服务").locator("option:checked")).toHaveText("DeepSeek A");
+    await expect(page.getByText("MinerU 公式漏检增强", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "了解 MinerU 公式漏检增强" }).click();
+    const mineruHelp = page.getByRole("dialog", { name: "MinerU 公式漏检增强" });
+    await expect(mineruHelp).toBeVisible();
+    await expect(mineruHelp.getByText("MinerU 不会重新绘制公式")).toBeVisible();
+    await expect(mineruHelp.getByRole("link", { name: "获取 MinerU Token" })).toHaveAttribute(
+      "href",
+      "https://mineru.net/apiManage/token",
+    );
+    await page.screenshot({ path: "test-results/mineru-help-1280x720.png", fullPage: true });
+    await mineruHelp.getByRole("button", { name: "关闭帮助" }).click();
+    await expect(mineruHelp).toBeHidden();
 
     await page.getByRole("button", { name: "运行时" }).click();
     await expect(page.getByRole("heading", { name: "PDF2ZH 运行时" })).toBeVisible();
 
-    await page.setViewportSize({ width: 1280, height: 720 });
     await page.screenshot({ path: "test-results/desktop-1280x720.png", fullPage: true });
   } finally {
     await application.close();
@@ -123,6 +145,7 @@ test("desktop update reuses a complete runtime from the legacy user-data directo
       ...process.env,
       LOCALAPPDATA: localAppData,
       PDF2ZH_ENGINE_IDLE_TIMEOUT_MS: "1000",
+      PDF2ZH_E2E_HIDE_WINDOW: "1",
     },
   });
   try {

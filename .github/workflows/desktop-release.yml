@@ -62,6 +62,17 @@ jobs:
 
             无需安装 Zotero、Python、uv 或 conda 的 Windows PDF 翻译桌面客户端。
 
+            ## v0.3.2 更新内容
+
+            - 新增可选的 **MinerU 公式漏检增强**：MinerU 只提供公式位置提示，PDF2ZH 会与自身识别结果比较，仅补充漏检的行间公式。
+            - 公式仍使用原始 PDF 对象并由 BabelDOC 排版，不使用 MinerU LaTeX 重新绘制，也不让 MinerU 接管正文翻译或页面布局。
+            - 翻译前可直接启用增强；已有翻译结果可从历史任务找到原始 PDF，按原配置重新生成 `.mineru-formula.pdf`，不会覆盖旧结果。
+            - 设置页新增 MinerU API 地址、`vlm` / `pipeline` 模型、Token 保存与连接测试；Token 使用 Windows DPAPI 加密保存在本机。
+            - 翻译页新增 MinerU 帮助弹窗，介绍适用场景、处理流程以及 [MinerU Token 获取方式](https://mineru.net/apiManage/token)。
+            - 已使用真实 MinerU API、DeepSeek 和 PDF2ZH 2.9.0 完成单页论文端到端验证。
+
+            > 隐私与费用提示：启用后原始 PDF 会上传到 MinerU，可能消耗 MinerU 配额并增加处理时间；从历史重新生成也可能再次调用翻译 API。普通文档或公式已经正常时可以保持关闭。
+
             ## 下载与安装
 
             **普通用户只需在 Assets 中下载 `PDF2ZH-Desktop-Setup-版本号.exe`，然后双击安装。**

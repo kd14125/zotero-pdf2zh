@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   enqueueRequestSchema,
+  mineruConfigSchema,
   providerProfileSchema,
   translationOptionsSchema,
 } from "../src/shared/schemas";
@@ -22,6 +23,7 @@ describe("IPC schemas", () => {
         translateFirst: true,
         qps: 10,
         poolSize: 0,
+        mineruFormulaEnhancement: false,
       }),
     ).toThrow("至少选择一种输出文件");
   });
@@ -29,5 +31,15 @@ describe("IPC schemas", () => {
   it("rejects unsupported providers and empty task lists", () => {
     expect(() => providerProfileSchema.parse({ provider: "google" })).toThrow();
     expect(() => enqueueRequestSchema.parse({ inputPaths: [] })).toThrow();
+  });
+
+  it("accepts the official MinerU API configuration", () => {
+    expect(
+      mineruConfigSchema.parse({
+        baseUrl: "https://mineru.net/api/v4",
+        modelVersion: "vlm",
+        hasApiKey: true,
+      }),
+    ).toMatchObject({ modelVersion: "vlm" });
   });
 });

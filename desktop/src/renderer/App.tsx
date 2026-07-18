@@ -7,11 +7,13 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  CircleHelp,
   CircleStop,
   Clock3,
   Copy,
   Download,
   Eye,
+  ExternalLink,
   FilePlus2,
   FileText,
   FolderOpen,
@@ -26,6 +28,7 @@ import {
   RefreshCw,
   RotateCcw,
   Save,
+  ScanSearch,
   Settings,
   ShieldCheck,
   SlidersHorizontal,
@@ -37,6 +40,7 @@ import type {
   AppSettings,
   AppUpdateState,
   McpIntegrationState,
+  MineruConfig,
   ProviderId,
   ProviderProfile,
   RuntimeState,
@@ -115,6 +119,7 @@ const defaultOptions: TranslationOptions = {
   translateFirst: true,
   qps: 10,
   poolSize: 0,
+  mineruFormulaEnhancement: false,
 };
 
 export function App() {
@@ -293,6 +298,15 @@ export function App() {
               await window.pdf2zh.tasks.retry(id);
               setView("tasks");
             }}
+            optimize={async (id) => {
+              try {
+                await window.pdf2zh.tasks.optimizeFormulas(id);
+                setView("tasks");
+                setNotice({ type: "success", text: "MinerU 公式优化任务已加入队列" });
+              } catch (error) {
+                showError(error, setNotice);
+              }
+            }}
           />
         )}
         {view === "settings" && (
@@ -421,9 +435,18 @@ function TranslateView(props: {
   start: () => void;
   busy: boolean;
 }) {
+  const [mineruHelpOpen, setMineruHelpOpen] = useState(false);
   const set = <K extends keyof TranslationOptions>(key: K, value: TranslationOptions[K]) =>
     props.setOptions({ ...props.options, [key]: value });
   const pickFiles = async () => props.addFiles(await window.pdf2zh.dialog.pickPdfs());
+  useEffect(() => {
+    if (!mineruHelpOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMineruHelpOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [mineruHelpOpen]);
   return (
     <div className="page translate-page">
       <PageHeader
@@ -602,6 +625,22 @@ function TranslateView(props: {
                 checked={props.options.saveGlossary}
                 onChange={(v) => set("saveGlossary", v)}
               />
+              <div className="check-with-help mineru-option-row">
+                <CheckBox
+                  label="MinerU 公式漏检增强"
+                  checked={props.options.mineruFormulaEnhancement}
+                  onChange={(v) => set("mineruFormulaEnhancement", v)}
+                />
+                <button
+                  className="inline-help-button"
+                  type="button"
+                  title="了解 MinerU 公式漏检增强"
+                  aria-label="了解 MinerU 公式漏检增强"
+                  onClick={() => setMineruHelpOpen(true)}
+                >
+                  <CircleHelp size={15} />
+                </button>
+              </div>
             </div>
           </div>
           <div className="field-grid">
@@ -653,6 +692,79 @@ function TranslateView(props: {
           </button>
         </aside>
       </div>
+      {mineruHelpOpen && (
+        <div className="modal-backdrop" onMouseDown={() => setMineruHelpOpen(false)}>
+          <section
+            className="help-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mineru-help-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="modal-titlebar">
+              <div>
+                <CircleHelp size={18} />
+                <span id="mineru-help-title">MinerU 公式漏检增强</span>
+              </div>
+              <button
+                className="icon-button"
+                type="button"
+                title="关闭帮助"
+                aria-label="关闭帮助"
+                onClick={() => setMineruHelpOpen(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="help-modal-body">
+              <p className="help-intro">
+                <strong>MinerU 不会重新绘制公式。</strong>
+                它只提供公式位置提示，PDF2ZH
+                会将这些位置与自身识别结果比较，只补充漏检的行间公式，最终仍由 BabelDOC 保留原 PDF
+                的公式对象和版式。
+              </p>
+              <section>
+                <h3>适合什么时候使用</h3>
+                <ul>
+                  <li>论文公式较多，普通翻译后发现个别公式被当作正文翻译。</li>
+                  <li>从历史记录重新生成公式增强版，不覆盖原翻译结果。</li>
+                  <li>普通文档或公式已经正常时可以关闭，以减少等待时间和 MinerU 调用。</li>
+                </ul>
+              </section>
+              <section>
+                <h3>如何获取 MinerU Token</h3>
+                <ol>
+                  <li>打开 MinerU Token 管理页并登录账号。</li>
+                  <li>创建或复制可用的 API Token。</li>
+                  <li>回到“设置 - MinerU 公式漏检增强”，粘贴 Token 后测试连接并保存。</li>
+                </ol>
+              </section>
+              <div className="help-notice">
+                启用后，原始 PDF 会上传到 MinerU，可能消耗 MinerU 配额并增加处理时间。Token 使用
+                Windows DPAPI 加密保存在当前电脑。
+              </div>
+            </div>
+            <div className="help-modal-actions">
+              <a
+                className="secondary-button help-link"
+                href="https://mineru.net/apiManage/token"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <ExternalLink size={16} />
+                获取 MinerU Token
+              </a>
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() => setMineruHelpOpen(false)}
+              >
+                我知道了
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
@@ -703,6 +815,7 @@ function TaskCard({
           <span>
             {providerDefinitions[task.provider].label} · {task.options.sourceLanguage} →{" "}
             {task.options.targetLanguage}
+            {task.formulaEnhancement ? " · MinerU 公式增强" : ""}
           </span>
         </div>
         <div className="task-actions">
@@ -740,11 +853,13 @@ function HistoryView({
   tasks,
   preview,
   retry,
+  optimize,
   clear,
 }: {
   tasks: TaskRecord[];
   preview: (path: string) => void;
   retry: (id: string) => Promise<void>;
+  optimize: (id: string) => Promise<void>;
   clear: () => void;
 }) {
   return (
@@ -803,6 +918,16 @@ function HistoryView({
                 </div>
               </div>
               <div className="history-actions">
+                {task.status === "completed" && (
+                  <button
+                    className="secondary-button"
+                    title="从原始 PDF 重新生成增强版，可能再次调用翻译 API"
+                    onClick={() => void optimize(task.id)}
+                  >
+                    <ScanSearch size={15} />
+                    优化公式
+                  </button>
+                )}
                 <button className="secondary-button" onClick={() => void retry(task.id)}>
                   <RotateCcw size={15} />
                   重试
@@ -864,6 +989,13 @@ function SettingsView({
     message: "正在检测 MCP 组件",
   });
   const [mcpBusy, setMcpBusy] = useState(false);
+  const [mineruConfig, setMineruConfig] = useState<MineruConfig>({
+    baseUrl: "https://mineru.net/api/v4",
+    modelVersion: "vlm",
+    hasApiKey: false,
+  });
+  const [mineruApiKey, setMineruApiKey] = useState("");
+  const [mineruBusy, setMineruBusy] = useState(false);
   useEffect(() => {
     if (selected) {
       setDraft(selected);
@@ -879,6 +1011,42 @@ function SettingsView({
       .then(setMcpState)
       .catch((error) => showError(error, notify));
   }, [notify]);
+  useEffect(() => {
+    void window.pdf2zh.mineru
+      .getConfig()
+      .then(setMineruConfig)
+      .catch((error) => showError(error, notify));
+  }, [notify]);
+  const saveMineru = async () => {
+    setMineruBusy(true);
+    try {
+      const saved = await window.pdf2zh.mineru.saveConfig({
+        ...mineruConfig,
+        apiKey: mineruApiKey || undefined,
+      });
+      setMineruConfig(saved);
+      setMineruApiKey("");
+      notify({ type: "success", text: "MinerU 配置已保存" });
+    } catch (error) {
+      showError(error, notify);
+    } finally {
+      setMineruBusy(false);
+    }
+  };
+  const testMineru = async () => {
+    setMineruBusy(true);
+    try {
+      const result = await window.pdf2zh.mineru.test({
+        ...mineruConfig,
+        apiKey: mineruApiKey || undefined,
+      });
+      notify({ type: result.ok ? "success" : "error", text: result.message });
+    } catch (error) {
+      showError(error, notify);
+    } finally {
+      setMineruBusy(false);
+    }
+  };
   const mcpAction = async (kind: "refresh" | "register" | "remove" | "copy") => {
     setMcpBusy(true);
     try {
@@ -1194,6 +1362,73 @@ function SettingsView({
           </div>
         </section>
       </div>
+      <section className="mineru-band">
+        <div className="mineru-heading">
+          <div className="mcp-symbol">
+            <ScanSearch size={21} />
+          </div>
+          <div>
+            <strong>MinerU 公式漏检增强</strong>
+            <span>仅补充 PDF2ZH 未识别的行间公式；历史优化会从原始 PDF 重新生成新文件。</span>
+          </div>
+        </div>
+        <div className="mineru-fields">
+          <label className="field">
+            <span>API 地址</span>
+            <input
+              value={mineruConfig.baseUrl}
+              onChange={(event) =>
+                setMineruConfig({ ...mineruConfig, baseUrl: event.target.value })
+              }
+            />
+          </label>
+          <label className="field">
+            <span>解析模型</span>
+            <select
+              value={mineruConfig.modelVersion}
+              onChange={(event) =>
+                setMineruConfig({
+                  ...mineruConfig,
+                  modelVersion: event.target.value as MineruConfig["modelVersion"],
+                })
+              }
+            >
+              <option value="vlm">VLM 高精度</option>
+              <option value="pipeline">Pipeline</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>API Token</span>
+            <input
+              type="password"
+              value={mineruApiKey}
+              placeholder={mineruConfig.hasApiKey ? "已加密保存，留空不修改" : "输入 MinerU Token"}
+              onChange={(event) => setMineruApiKey(event.target.value)}
+            />
+          </label>
+        </div>
+        <div className="mineru-actions">
+          <span>
+            PDF 会上传到 MinerU；重新生成时可能再次调用翻译 API。Token 使用 Windows DPAPI 保存。
+          </span>
+          <button
+            className="secondary-button"
+            disabled={mineruBusy}
+            onClick={() => void testMineru()}
+          >
+            {mineruBusy ? <LoaderCircle className="spin" size={15} /> : <Activity size={15} />}
+            测试连接
+          </button>
+          <button
+            className="primary-button"
+            disabled={mineruBusy}
+            onClick={() => void saveMineru()}
+          >
+            <Save size={15} />
+            保存 MinerU
+          </button>
+        </div>
+      </section>
       <section className="mcp-band">
         <div className={`mcp-symbol ${mcpState.registered ? "connected" : ""}`}>
           <Bot size={22} />

@@ -21,16 +21,19 @@ import {
 } from "./providers";
 import { RuntimeManager } from "./runtime-manager";
 import { JsonStore } from "./store";
+import { MineruManager } from "./mineru";
 
 export class TaskManager extends EventEmitter {
   private tasks: TaskRecord[] = [];
   private runningId?: string;
   private terminal?: pty.IPty;
+  private mineruAbort?: AbortController;
 
   constructor(
     private readonly store: JsonStore,
     private readonly providers: ProviderRepository,
     private readonly runtime: RuntimeManager,
+    private readonly mineru: MineruManager,
   ) {
     super();
     this.tasks = store.getTasks();
@@ -57,6 +60,9 @@ export class TaskManager extends EventEmitter {
           progress: { percent: 0, stage: "排队中", message: "等待开始" },
           outputFiles: [],
           logs: [],
+          formulaEnhancement:
+            request.formulaEnhancement ?? request.options.mineruFormulaEnhancement,
+          sourceTaskId: request.sourceTaskId,
           createdAt: now,
         };
       }),
@@ -76,11 +82,13 @@ export class TaskManager extends EventEmitter {
       await this.persistAndEmit();
       return;
     }
-    if (task.status !== "running" || this.runningId !== id || !this.terminal) return;
+    if (task.status !== "running" || this.runningId !== id) return;
     task.status = "cancelled";
     task.progress.stage = "正在取消";
     task.progress.message = "正在终止翻译进程";
     await this.persistAndEmit();
+    this.mineruAbort?.abort();
+    if (!this.terminal) return;
     if (process.platform === "win32") {
       spawnProcess("taskkill", ["/PID", String(this.terminal.pid), "/T", "/F"], {
         windowsHide: true,
@@ -100,6 +108,25 @@ export class TaskManager extends EventEmitter {
       inputPaths: [source.inputPath],
       profileId: source.profileId,
       options: source.options,
+      formulaEnhancement: source.formulaEnhancement,
+      sourceTaskId: source.sourceTaskId,
+    });
+    return task;
+  }
+
+  async optimizeFormulas(id: string): Promise<TaskRecord> {
+    const source = this.requireTask(id);
+    if (source.status !== "completed") throw new Error("仅已完成的任务可以优化公式");
+    await validatePdf(source.inputPath);
+    if (!this.mineru.getConfig().hasApiKey) {
+      throw new Error("请先在设置中配置 MinerU API Token");
+    }
+    const [task] = await this.enqueue({
+      inputPaths: [source.inputPath],
+      profileId: source.profileId,
+      options: { ...source.options, mineruFormulaEnhancement: true },
+      formulaEnhancement: true,
+      sourceTaskId: source.id,
     });
     return task;
   }
@@ -117,6 +144,7 @@ export class TaskManager extends EventEmitter {
   }
 
   shutdown(): void {
+    this.mineruAbort?.abort();
     if (!this.terminal) return;
     if (process.platform === "win32") {
       spawnProcess("taskkill", ["/PID", String(this.terminal.pid), "/T", "/F"], {
@@ -184,9 +212,36 @@ export class TaskManager extends EventEmitter {
         profile.provider,
         task.options,
       );
+      let command = binary;
+      let commandArgs = args;
+      let commandEnvironment: Record<string, string> | undefined;
+      if (task.formulaEnhancement) {
+        task.progress = {
+          percent: 1,
+          stage: "MinerU 公式分析",
+          message: "正在识别 PDF2ZH 漏检的公式区域",
+        };
+        await this.persistAndEmit();
+        this.mineruAbort = new AbortController();
+        const layoutPath = await this.mineru.prepareFormulaHints(
+          task.inputPath,
+          temporaryRoot,
+          this.mineruAbort.signal,
+        );
+        const runtimeRoot = dirname(binary);
+        const python = join(runtimeRoot, "runtime", "python.exe");
+        const runner = resolveFormulaRunnerPath();
+        await Promise.all([access(python), access(runner)]);
+        command = python;
+        commandArgs = [runner, ...args];
+        commandEnvironment = {
+          PDF2ZH_SITE_PACKAGES: join(runtimeRoot, "site-packages"),
+          PDF2ZH_MINERU_LAYOUT: layoutPath,
+        };
+      }
       task.progress = { percent: 1, stage: "启动翻译", message: "正在加载模型与文档" };
       await this.persistAndEmit();
-      const exitCode = await this.spawn(binary, args, task);
+      const exitCode = await this.spawn(command, commandArgs, task, commandEnvironment);
       if (this.currentStatus(task.id) === "cancelled") throw new CancelledError();
       if (exitCode !== 0) throw new Error(`PDF2ZH 进程退出，代码 ${exitCode}`);
       const generated = await collectPdfs(stagingOutput);
@@ -199,7 +254,10 @@ export class TaskManager extends EventEmitter {
       task.progress = { percent: 99, stage: "整理结果", message: "正在保存输出文件" };
       await this.persistAndEmit();
       for (const source of generated) {
-        const destination = await uniqueDestination(outputRoot, basename(source));
+        const outputName = task.formulaEnhancement
+          ? withFormulaEnhancementSuffix(basename(source))
+          : basename(source);
+        const destination = await uniqueDestination(outputRoot, outputName);
         await copyAtomically(source, destination);
         task.outputFiles.push(destination);
       }
@@ -224,12 +282,18 @@ export class TaskManager extends EventEmitter {
     } finally {
       task.finishedAt = new Date().toISOString();
       await providerBridge?.close().catch(() => undefined);
+      this.mineruAbort = undefined;
       await rm(temporaryRoot, { recursive: true, force: true });
       await this.persistAndEmit();
     }
   }
 
-  private spawn(binary: string, args: string[], task: TaskRecord): Promise<number> {
+  private spawn(
+    binary: string,
+    args: string[],
+    task: TaskRecord,
+    environment?: Record<string, string>,
+  ): Promise<number> {
     return new Promise((resolve, reject) => {
       try {
         const env = {
@@ -238,6 +302,7 @@ export class TaskManager extends EventEmitter {
           FORCE_COLOR: "1",
           FORCE_TERMINAL: "1",
           TERM: "xterm-256color",
+          ...environment,
         } as Record<string, string>;
         delete env.NO_COLOR;
         const terminal = pty.spawn(binary, args, {
@@ -282,6 +347,17 @@ export class TaskManager extends EventEmitter {
     await this.store.setTasks(this.tasks);
     this.emit("changed", this.list());
   }
+}
+
+function resolveFormulaRunnerPath(): string {
+  return app.isPackaged
+    ? join(process.resourcesPath, "formula-hints-runner.py")
+    : join(app.getAppPath(), "resources", "formula-hints-runner.py");
+}
+
+function withFormulaEnhancementSuffix(fileName: string): string {
+  const parts = parse(fileName);
+  return `${parts.name}.mineru-formula${parts.ext}`;
 }
 
 class CancelledError extends Error {}
