@@ -39,6 +39,7 @@ import {
 import type {
   AppSettings,
   AppUpdateState,
+  LatexState,
   McpIntegrationState,
   MineruConfig,
   ProviderId,
@@ -627,15 +628,15 @@ function TranslateView(props: {
               />
               <div className="check-with-help mineru-option-row">
                 <CheckBox
-                  label="MinerU 公式漏检增强"
+                  label="MinerU 矢量公式增强"
                   checked={props.options.mineruFormulaEnhancement}
                   onChange={(v) => set("mineruFormulaEnhancement", v)}
                 />
                 <button
                   className="inline-help-button"
                   type="button"
-                  title="了解 MinerU 公式漏检增强"
-                  aria-label="了解 MinerU 公式漏检增强"
+                  title="了解 MinerU 矢量公式增强"
+                  aria-label="了解 MinerU 矢量公式增强"
                   onClick={() => setMineruHelpOpen(true)}
                 >
                   <CircleHelp size={15} />
@@ -704,7 +705,7 @@ function TranslateView(props: {
             <div className="modal-titlebar">
               <div>
                 <CircleHelp size={18} />
-                <span id="mineru-help-title">MinerU 公式漏检增强</span>
+                <span id="mineru-help-title">MinerU 矢量公式增强</span>
               </div>
               <button
                 className="icon-button"
@@ -718,15 +719,15 @@ function TranslateView(props: {
             </div>
             <div className="help-modal-body">
               <p className="help-intro">
-                <strong>MinerU 不会重新绘制公式。</strong>
-                它只提供公式位置提示，PDF2ZH
-                会将这些位置与自身识别结果比较，只补充漏检的行间公式，最终仍由 BabelDOC 保留原 PDF
-                的公式对象和版式。
+                <strong>MinerU 提供公式位置和 LaTeX，BabelDOC 负责重新排版。</strong>
+                应用会把公式编译为不可拆分的矢量对象，以真实宽度、高度和基线参与中文排版，再清理旧公式框并写回
+                PDF。
               </p>
               <section>
                 <h3>适合什么时候使用</h3>
                 <ul>
                   <li>论文公式较多，普通翻译后发现个别公式被当作正文翻译。</li>
+                  <li>行内分式、积分或上下标发生重叠、拆散和重复。</li>
                   <li>从历史记录重新生成公式增强版，不覆盖原翻译结果。</li>
                   <li>普通文档或公式已经正常时可以关闭，以减少等待时间和 MinerU 调用。</li>
                 </ul>
@@ -741,7 +742,8 @@ function TranslateView(props: {
               </section>
               <div className="help-notice">
                 启用后，原始 PDF 会上传到 MinerU，可能消耗 MinerU 配额并增加处理时间。Token 使用
-                Windows DPAPI 加密保存在当前电脑。
+                Windows DPAPI 加密保存在当前电脑。内置 MathJax 无需安装；特殊 LaTeX 宏可切换本机
+                LaTeX。
               </div>
             </div>
             <div className="help-modal-actions">
@@ -992,10 +994,16 @@ function SettingsView({
   const [mineruConfig, setMineruConfig] = useState<MineruConfig>({
     baseUrl: "https://mineru.net/api/v4",
     modelVersion: "vlm",
+    formulaRenderer: "mathjax",
     hasApiKey: false,
+  });
+  const [latexState, setLatexState] = useState<LatexState>({
+    status: "missing",
+    message: "正在检测 LaTeX",
   });
   const [mineruApiKey, setMineruApiKey] = useState("");
   const [mineruBusy, setMineruBusy] = useState(false);
+  const [latexBusy, setLatexBusy] = useState(false);
   useEffect(() => {
     if (selected) {
       setDraft(selected);
@@ -1016,7 +1024,34 @@ function SettingsView({
       .getConfig()
       .then(setMineruConfig)
       .catch((error) => showError(error, notify));
+    void window.pdf2zh.mineru
+      .getLatexState()
+      .then(setLatexState)
+      .catch((error) => showError(error, notify));
   }, [notify]);
+  const refreshLatex = async () => {
+    setLatexBusy(true);
+    try {
+      setLatexState(await window.pdf2zh.mineru.getLatexState());
+    } catch (error) {
+      showError(error, notify);
+    } finally {
+      setLatexBusy(false);
+    }
+  };
+  const installLatex = async () => {
+    setLatexBusy(true);
+    setLatexState({ status: "installing", message: "正在通过 winget 安装 MiKTeX" });
+    try {
+      const state = await window.pdf2zh.mineru.installLatex();
+      setLatexState(state);
+      notify({ type: state.status === "ready" ? "success" : "error", text: state.message });
+    } catch (error) {
+      showError(error, notify);
+    } finally {
+      setLatexBusy(false);
+    }
+  };
   const saveMineru = async () => {
     setMineruBusy(true);
     try {
@@ -1368,8 +1403,8 @@ function SettingsView({
             <ScanSearch size={21} />
           </div>
           <div>
-            <strong>MinerU 公式漏检增强</strong>
-            <span>仅补充 PDF2ZH 未识别的行间公式；历史优化会从原始 PDF 重新生成新文件。</span>
+            <strong>MinerU 矢量公式增强</strong>
+            <span>公式以真实尺寸参与 BabelDOC 排版；历史优化会从原始 PDF 重新生成新文件。</span>
           </div>
         </div>
         <div className="mineru-fields">
@@ -1398,6 +1433,21 @@ function SettingsView({
             </select>
           </label>
           <label className="field">
+            <span>公式渲染器</span>
+            <select
+              value={mineruConfig.formulaRenderer}
+              onChange={(event) =>
+                setMineruConfig({
+                  ...mineruConfig,
+                  formulaRenderer: event.target.value as MineruConfig["formulaRenderer"],
+                })
+              }
+            >
+              <option value="mathjax">内置 MathJax（推荐）</option>
+              <option value="latex">本机 LaTeX</option>
+            </select>
+          </label>
+          <label className="field">
             <span>API Token</span>
             <input
               type="password"
@@ -1408,9 +1458,27 @@ function SettingsView({
           </label>
         </div>
         <div className="mineru-actions">
-          <span>
-            PDF 会上传到 MinerU；重新生成时可能再次调用翻译 API。Token 使用 Windows DPAPI 保存。
-          </span>
+          <div className={`latex-status ${latexState.status}`}>
+            <span>{latexState.message}</span>
+            <button
+              className="icon-button"
+              title="重新检测 LaTeX"
+              disabled={latexBusy}
+              onClick={() => void refreshLatex()}
+            >
+              <RefreshCw className={latexBusy ? "spin" : ""} size={15} />
+            </button>
+            {latexState.status !== "ready" && (
+              <button
+                className="secondary-button"
+                disabled={latexBusy}
+                onClick={() => void installLatex()}
+              >
+                <Download size={15} />
+                安装 LaTeX
+              </button>
+            )}
+          </div>
           <button
             className="secondary-button"
             disabled={mineruBusy}

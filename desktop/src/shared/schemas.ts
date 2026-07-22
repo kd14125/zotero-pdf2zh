@@ -49,6 +49,7 @@ export const enqueueRequestSchema = z.object({
 export const mineruConfigSchema = z.object({
   baseUrl: z.string().trim().url().max(500),
   modelVersion: z.enum(["vlm", "pipeline"]),
+  formulaRenderer: z.enum(["mathjax", "latex"]),
   hasApiKey: z.boolean(),
   apiKey: z.string().max(2000).optional(),
 });

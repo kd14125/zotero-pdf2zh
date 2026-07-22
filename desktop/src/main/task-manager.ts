@@ -219,7 +219,7 @@ export class TaskManager extends EventEmitter {
         task.progress = {
           percent: 1,
           stage: "MinerU 公式分析",
-          message: "正在识别 PDF2ZH 漏检的公式区域",
+          message: "正在识别公式并准备矢量重绘资源",
         };
         await this.persistAndEmit();
         this.mineruAbort = new AbortController();
@@ -228,6 +228,7 @@ export class TaskManager extends EventEmitter {
           temporaryRoot,
           this.mineruAbort.signal,
         );
+        const formulaManifest = await this.mineru.prepareFormulaAssets(layoutPath, temporaryRoot);
         const runtimeRoot = dirname(binary);
         const python = join(runtimeRoot, "runtime", "python.exe");
         const runner = resolveFormulaRunnerPath();
@@ -237,6 +238,7 @@ export class TaskManager extends EventEmitter {
         commandEnvironment = {
           PDF2ZH_SITE_PACKAGES: join(runtimeRoot, "site-packages"),
           PDF2ZH_MINERU_LAYOUT: layoutPath,
+          PDF2ZH_FORMULA_MANIFEST: formulaManifest,
         };
       }
       task.progress = { percent: 1, stage: "启动翻译", message: "正在加载模型与文档" };

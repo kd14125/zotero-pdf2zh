@@ -142,6 +142,10 @@ export class EngineServer {
         return this.mineru.saveConfig(mineruConfigSchema.parse(request.params));
       case "mineru.test":
         return this.mineru.test(mineruConfigSchema.parse(request.params));
+      case "mineru.latex-state":
+        return this.mineru.getLatexState();
+      case "mineru.latex-install":
+        return this.mineru.installLatex();
       case "runtime.state":
         return this.runtime.getState();
       case "runtime.ensure":

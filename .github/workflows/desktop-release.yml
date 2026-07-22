@@ -62,16 +62,17 @@ jobs:
 
             无需安装 Zotero、Python、uv 或 conda 的 Windows PDF 翻译桌面客户端。
 
-            ## v0.3.2 更新内容
+            ## v0.4.0 更新内容
 
-            - 新增可选的 **MinerU 公式漏检增强**：MinerU 只提供公式位置提示，PDF2ZH 会与自身识别结果比较，仅补充漏检的行间公式。
-            - 公式仍使用原始 PDF 对象并由 BabelDOC 排版，不使用 MinerU LaTeX 重新绘制，也不让 MinerU 接管正文翻译或页面布局。
-            - 翻译前可直接启用增强；已有翻译结果可从历史任务找到原始 PDF，按原配置重新生成 `.mineru-formula.pdf`，不会覆盖旧结果。
-            - 设置页新增 MinerU API 地址、`vlm` / `pipeline` 模型、Token 保存与连接测试；Token 使用 Windows DPAPI 加密保存在本机。
-            - 翻译页新增 MinerU 帮助弹窗，介绍适用场景、处理流程以及 [MinerU Token 获取方式](https://mineru.net/apiManage/token)。
-            - 已使用真实 MinerU API、DeepSeek 和 PDF2ZH 2.9.0 完成单页论文端到端验证。
+            - **复杂行内公式矢量重绘**：MinerU 提供公式位置和 LaTeX，包含分式、积分、求和等结构的复杂行内公式会作为不可拆分单元参与 BabelDOC 排版，减少公式拆散、残片和正文遮挡。
+            - **内置 MathJax 4**：默认在本机离线生成矢量 SVG/PDF，不需要安装 Node.js、LaTeX 或其他公式工具。
+            - **可选本机 LaTeX**：设置页可检测 `pdflatex`，缺失时可通过 `winget` 安装 MiKTeX；编译使用 `-no-shell-escape` 并拒绝文件读写等危险命令。
+            - **逐公式回退**：MathJax 无法处理特殊宏时，如果检测到本机 LaTeX，可只对失败公式回退，不影响其他公式。
+            - **行间公式兼容**：继续使用 MinerU 坐标补充 PDF2ZH 漏检的行间公式，不让 MinerU 接管正文翻译或整页布局。
+            - **设置与历史任务**：新增公式渲染器选择、LaTeX 检测和安装状态；已有任务仍可从历史找到原始 PDF，按原配置生成 `.mineru-formula.pdf`，不覆盖旧结果。
+            - **真实论文验证**：完成关闭/开启 MinerU 的同参数 A/B 测试，并验证单语、左右双语和上下对照输出。
 
-            > 隐私与费用提示：启用后原始 PDF 会上传到 MinerU，可能消耗 MinerU 配额并增加处理时间；从历史重新生成也可能再次调用翻译 API。普通文档或公式已经正常时可以保持关闭。
+            > 隐私与费用提示：启用后原始 PDF 会上传到 MinerU，可能消耗 MinerU 配额并增加处理时间；从历史重新生成也可能再次调用翻译 API。MathJax 和可选 LaTeX 渲染均在本机执行。普通文档或公式已经正常时可以保持关闭。
 
             ## 下载与安装
 

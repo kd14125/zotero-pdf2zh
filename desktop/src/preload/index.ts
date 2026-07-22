@@ -38,6 +38,8 @@ const api: DesktopApi = {
     getConfig: () => ipcRenderer.invoke(channels.mineruGet),
     saveConfig: (config) => ipcRenderer.invoke(channels.mineruSave, config),
     test: (config) => ipcRenderer.invoke(channels.mineruTest, config),
+    getLatexState: () => ipcRenderer.invoke(channels.mineruLatexState),
+    installLatex: () => ipcRenderer.invoke(channels.mineruLatexInstall),
   },
   runtime: {
     getState: () => ipcRenderer.invoke(channels.runtimeState),

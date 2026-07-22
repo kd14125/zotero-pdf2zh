@@ -38,8 +38,9 @@ describe("IPC schemas", () => {
       mineruConfigSchema.parse({
         baseUrl: "https://mineru.net/api/v4",
         modelVersion: "vlm",
+        formulaRenderer: "mathjax",
         hasApiKey: true,
       }),
-    ).toMatchObject({ modelVersion: "vlm" });
+    ).toMatchObject({ modelVersion: "vlm", formulaRenderer: "mathjax" });
   });
 });

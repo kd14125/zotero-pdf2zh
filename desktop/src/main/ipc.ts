@@ -80,6 +80,8 @@ export function registerIpc(options: {
   ipcMain.handle(channels.mineruGet, () => engine.request("mineru.get"));
   ipcMain.handle(channels.mineruSave, (_event, input) => engine.request("mineru.save", input));
   ipcMain.handle(channels.mineruTest, (_event, input) => engine.request("mineru.test", input));
+  ipcMain.handle(channels.mineruLatexState, () => engine.request("mineru.latex-state"));
+  ipcMain.handle(channels.mineruLatexInstall, () => engine.request("mineru.latex-install"));
 
   ipcMain.handle(channels.runtimeState, () => engine.request("runtime.state"));
   ipcMain.handle(channels.runtimeEnsure, () => engine.request("runtime.ensure"));

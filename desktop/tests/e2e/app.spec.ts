@@ -47,11 +47,15 @@ test("desktop shell renders all primary work views", async () => {
     await expect(page.getByRole("heading", { name: "设置" })).toBeVisible();
     await expect(page.getByText("API Key 已使用 Windows DPAPI 加密保存在本机。")).toBeVisible();
     await expect(page.getByText("Codex MCP", { exact: true })).toBeVisible();
-    await expect(page.getByText("MinerU 公式漏检增强", { exact: true })).toBeVisible();
+    await expect(page.getByText("MinerU 矢量公式增强", { exact: true })).toBeVisible();
     await expect(page.getByLabel("API 地址", { exact: true })).toHaveValue(
       "https://mineru.net/api/v4",
     );
     await expect(page.getByRole("button", { name: "保存 MinerU" })).toBeVisible();
+    await expect(page.getByLabel("公式渲染器")).toHaveValue("mathjax");
+    await expect(page.getByLabel("公式渲染器").locator('option[value="latex"]')).toHaveText(
+      "本机 LaTeX",
+    );
     await expect(page.getByLabel("服务类型").locator('option[value="anthropic"]')).toHaveText(
       "Anthropic Messages",
     );
@@ -92,11 +96,13 @@ test("desktop shell renders all primary work views", async () => {
     await page.screenshot({ path: "test-results/settings-mineru-1280x720.png", fullPage: true });
     await page.getByRole("button", { name: "翻译", exact: true }).click();
     await expect(page.getByLabel("翻译服务").locator("option:checked")).toHaveText("DeepSeek A");
-    await expect(page.getByText("MinerU 公式漏检增强", { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "了解 MinerU 公式漏检增强" }).click();
-    const mineruHelp = page.getByRole("dialog", { name: "MinerU 公式漏检增强" });
+    await expect(page.getByText("MinerU 矢量公式增强", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "了解 MinerU 矢量公式增强" }).click();
+    const mineruHelp = page.getByRole("dialog", { name: "MinerU 矢量公式增强" });
     await expect(mineruHelp).toBeVisible();
-    await expect(mineruHelp.getByText("MinerU 不会重新绘制公式")).toBeVisible();
+    await expect(
+      mineruHelp.getByText("MinerU 提供公式位置和 LaTeX，BabelDOC 负责重新排版。"),
+    ).toBeVisible();
     await expect(mineruHelp.getByRole("link", { name: "获取 MinerU Token" })).toHaveAttribute(
       "href",
       "https://mineru.net/apiManage/token",

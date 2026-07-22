@@ -23,6 +23,8 @@ export const channels = {
   mineruGet: "mineru:get",
   mineruSave: "mineru:save",
   mineruTest: "mineru:test",
+  mineruLatexState: "mineru:latex-state",
+  mineruLatexInstall: "mineru:latex-install",
   runtimeState: "runtime:state",
   runtimeEnsure: "runtime:ensure",
   runtimeCheckUpdate: "runtime:check-update",

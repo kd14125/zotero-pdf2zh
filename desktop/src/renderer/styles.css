@@ -921,7 +921,10 @@ h2 {
 }
 .mineru-fields {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(140px, 0.6fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(130px, 0.55fr) minmax(160px, 0.75fr) minmax(
+      0,
+      1fr
+    );
   gap: 12px;
   margin-top: 14px;
 }
@@ -932,11 +935,33 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
 }
 .mineru-actions > span {
   margin-right: auto;
+}
+.latex-status {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 10px;
+}
+.latex-status > span {
+  overflow: hidden;
+  max-width: 430px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.latex-status.ready > span {
+  color: var(--success);
+}
+.latex-status.error > span {
+  color: var(--danger);
 }
 .mcp-band {
   display: grid;

@@ -45,8 +45,17 @@ export interface TranslationOptions {
 export interface MineruConfig {
   baseUrl: string;
   modelVersion: "vlm" | "pipeline";
+  formulaRenderer: "mathjax" | "latex";
   hasApiKey: boolean;
   apiKey?: string;
+}
+
+export interface LatexState {
+  status: "missing" | "ready" | "installing" | "error";
+  engine?: "pdflatex" | "miktex";
+  executable?: string;
+  version?: string;
+  message: string;
 }
 
 export interface MineruTestResult {
@@ -212,6 +221,8 @@ export interface DesktopApi {
     getConfig(): Promise<MineruConfig>;
     saveConfig(config: MineruConfig): Promise<MineruConfig>;
     test(config: MineruConfig): Promise<MineruTestResult>;
+    getLatexState(): Promise<LatexState>;
+    installLatex(): Promise<LatexState>;
   };
   runtime: {
     getState(): Promise<RuntimeState>;

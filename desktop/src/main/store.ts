@@ -37,6 +37,7 @@ const initialData: PersistedData = {
   mineru: {
     baseUrl: "https://mineru.net/api/v4",
     modelVersion: "vlm",
+    formulaRenderer: "mathjax",
   },
 };
 

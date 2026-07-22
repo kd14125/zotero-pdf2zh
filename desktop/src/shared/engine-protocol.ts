@@ -15,6 +15,8 @@ export const ENGINE_METHODS = [
   "mineru.get",
   "mineru.save",
   "mineru.test",
+  "mineru.latex-state",
+  "mineru.latex-install",
   "runtime.state",
   "runtime.ensure",
   "runtime.check-update",
